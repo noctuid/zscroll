@@ -1,0 +1,45 @@
+.\" Manpage for zscroll.
+.\" Contact <nocturnalartifice[at]gmail[dot]com> to correct errors or typos.
+.TH ZSCROLL 1 "11 MARCH 2015" "zscroll 0.1" "zscroll man page"
+.SH NAME
+zscroll \- scroll text for panels
+.SH SYNOPSIS
+zscroll [-hn] [-l length] [-b beforetext] [-a aftertext] [-d delay] [scrolltext]
+.SH DESCRIPTION
+Zscroll is used to create continuously scrolling text.
+.SH OPTIONS
+.TP
+\fB\-h\fR, \fB \-\-help\fR
+Print help text.
+.TP
+\fB\-l\fR, \fB \-\-length\fR
+Specify a character length for the text to be scrolled in. If the text given is less than this length, zscroll will not scroll it but just print in place. (default: 40)
+.TP
+\fB\-b\fR, \fB \-\-beforetext\fR
+Specify padding text that will always be displayed to the left of the scrolling section. (default: "")
+.TP
+\fB\-a\fR, \fB \-\-aftertext\fR
+Specify padding text that will always be displayed to the right of the scrolling section. (default: "")
+.TP
+\fB\-d\fR, \fB \-\-delay\fR
+Specify the delay between scroll steps. (default: 0.4)
+.TP
+\fB\-n\fR, \fB \-\-newline\fR
+Add a newline after every update/step. (default: false)
+.SH EXAMPLES
+Scroll currently playing mpd song with mpc:
+.br
+$ zscroll -b "playing: " "$(mpc current) - "
+.br
+
+You can also pipe into zscroll:
+.br
+$ xtitle | zscroll -l 60
+.SH SEE ALSO
+bar(1)
+.SH BUGS
+If you encounter any bugs, please make an issue on the github page.
+.SH AUTHOR
+Lit Wakefield <nocturnalartifice[at]gmail[dot]com>
+.br
+Source: https://github.com/angelic-sedition/zscroll
