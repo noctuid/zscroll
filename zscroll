@@ -1,0 +1,58 @@
+#!/usr/bin/env python3
+import sys
+import argparse
+from time import sleep
+
+parser = argparse.ArgumentParser()
+# allow for a positional argument or piping into
+parser.add_argument("scrolltext", nargs="?", help="text to scroll;" +
+                    " will print in place if not longer than scroll length;" +
+                    " can be read from stdin," +
+                    " e.g 'echo text | zscroll'",
+                    default=sys.stdin.read() if not sys.stdin.isatty() else "")
+parser.add_argument("-l", "--length", type=int, default=40,
+                    help="length of scrolling text (default: 40)")
+parser.add_argument("-b", "--beforetext", default="",
+                    help="padding text to be displayed to the " +
+                    "left of the scrolling text (default: \"\")")
+parser.add_argument("-a", "--aftertext", default="",
+                    help="padding text to be displayed to the " +
+                    "right of the scrolling text (default: \"\")")
+parser.add_argument("-d", "--delay", type=float, default=0.4,
+                    help="delay for scrolling update (default: 0.4)")
+# no args
+parser.add_argument("-n", "--newline", action="store_true",
+                    help="Print a newline after each update (default: no)")
+args = parser.parse_args()
+
+
+def scrollText():
+    text = args.scrolltext.rstrip('\n')
+    scroll = True
+    # only scroll if text is longer than scrolling area
+    if len(text) <= args.length:
+        scroll = False
+    while True:
+        displayedText = (args.beforetext + text[:args.length] +
+                         args.aftertext)
+        if args.newline:
+            print(displayedText, flush=True)
+        else:
+            print(displayedText, end='\r', flush=True)
+        # rotate text
+        if scroll:
+            text = text[1:] + text[0]
+        sleep(args.delay)
+
+
+def main():
+    if len(args.scrolltext) > 0:
+        try:
+            scrollText()
+        except KeyboardInterrupt:
+            sys.exit(0)
+    else:
+        parser.print_help()
+
+
+if __name__ == "__main__": main()
