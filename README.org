@@ -1,0 +1,35 @@
+* Zscroll
+** Example
+The '-n' is needed when using with bar-aint-recursive:
+#+begin_src sh
+$ zscroll -n -b "⮕ " "$(mpc current) - "
+# or
+$ mpc current | zscroll
+#+end_src
+
+A much zoomed in example (note that the scroll speed can be changed):
+[[http://angelic-sedition.github.io/zscroll][http://angelic-sedition.github.io/zscroll/assets/example_bar.gif]]
+
+For the function I use with bar-aint-recursive see the [[https://github.com/angelic-sedition/dotfiles/blob/a251c682aa71e115ca83e75f938016e2f134ed47/aesthetics/.panel_scripts/panel#L39][corresponding section]] in my panel script. It deals with updating the scroller on state and song changes. Also see [[https://github.com/angelic-sedition/dotfiles/blob/a251c682aa71e115ca83e75f938016e2f134ed47/aesthetics/.panel_scripts/panel#L83][the section]] for scrolling xtitle output as an example.
+
+** Installation
+*** Arch
+Install [[https://aur.archlinux.org/packages/zscroll-git/][zscroll-git]] from the AUR.
+
+*** Manual
+#+begin_src sh
+$ git clone https://github.com/angelic-sedition/zscroll
+$ cd zscroll
+$ python setup.py install
+#+end_src
+
+** Similar
+- z3bratabs' [[https://github.com/z3bratabs/skroll][skroll]]
+- benghaem's [[https://github.com/benghaem/dotfiles/blob/1dcbee5ed235a8e319dcc4255df10f0a6b23b6fe/bin/panel/scroller.c][scroller]]
+
+** Why
+I was using benghaem's scroller for a while. I didn't like that the arguments were all positional, the lack of a right text padding option, and the lack of an option to change the scroll speed. I just found skroll which is nicer since it has options and an actual manpage and is in the AUR. However, it doesn't have a left text option which is necessary for my bar script to work properly. Also, they are both written in c, which doesn't seem practical to me for such a simple script.
+
+Zscroll supports the features I liked from each. It has a speed option, adds an option for right padding text, and will work on text as an argument or piped into it.
+
+I called this zscroll because it's the last scroller I'll use.. but more importantly because I couldn't think of another name.
