@@ -20,7 +20,7 @@ Install [[https://aur.archlinux.org/packages/zscroll-git/][zscroll-git]] from th
 #+begin_src sh
 $ git clone https://github.com/angelic-sedition/zscroll
 $ cd zscroll
-$ python setup.py install
+$ sudo python setup.py install
 #+end_src
 
 ** Similar
