@@ -26,6 +26,10 @@ Specify the delay between scroll steps. (default: 0.4)
 .TP
 \fB\-n\fR, \fB \-\-newline\fR
 Add a newline after every update/step. (default: false)
+\fB\-c\fR, \fB \-\-characterlength\fR
+By default, zscroll will count full width characters (e.g. Japanese and Chinese characters) as length two since with fixed-width fonts these characters will be twice as long as normal letters. This prevents a bug where the visual length of the scrolling text will become larger when full width characters appear, leaving characters left over and stuck at the end where the full width characters used to be. This option disables this behaviour and will determine length by character count instead. (default: false)
+\fB\-f\fR, \fB \-\-fullwidth\fR
+This option provides a different way of dealing with fullwidth characters. If fullwidth characters are detected in the string to be scrolled, it will convert normal ascii characters to the fullwidth equivalents so that all characters will be equal width. This may make the characters look uglier, but it will result in a more visually consistent scroll speed. This cannot be used with '-c' option or it will have no effect. Also note that all characters will be counted as visual length two so if the '-l' argument is an odd number, the scrolling text will be the same as if the '-l' was one less. (default: false)
 .SH EXAMPLES
 Scroll currently playing mpd song with mpc:
 .br

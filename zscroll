@@ -2,6 +2,7 @@
 import sys
 import argparse
 from time import sleep
+import unicodedata
 
 parser = argparse.ArgumentParser()
 # allow for a positional argument or piping into
@@ -23,17 +24,88 @@ parser.add_argument("-d", "--delay", type=float, default=0.4,
 # no args
 parser.add_argument("-n", "--newline", action="store_true",
                     help="Print a newline after each update (default: no)")
+parser.add_argument("-c", "--characterlength", action="store_true",
+                    help="Count length by characters instead of considering" +
+                    " fullwidth characters to be length 2 (default: no)")
+parser.add_argument("-f", "--fullwidth", action="store_true",
+                    help="If fullwidth characters are found in the given scrolltext," +
+                    " convert all characters to be fullwidth (default: no)")
 args = parser.parse_args()
+
+
+def visualLen(text):
+    visualLength = 0
+    for char in text:
+        width = unicodedata.east_asian_width(char)
+        if width == 'W' or width == 'F':
+            visualLength += 2
+        else:
+            visualLength += 1
+    return visualLength
+
+
+def makeVisualLen(chosenLength, text):
+    visualLength = 0
+    final = ""
+    for char in text:
+        if visualLength < chosenLength:
+            width = unicodedata.east_asian_width(char)
+            if width == 'W' or width == 'F':
+                visualLength += 2
+            else:
+                visualLength += 1
+            final += char
+        else:
+            break
+    if visualLength == chosenLength + 1:
+        final = final[:-1] + " "
+    return final
+
+
+# http://stackoverflow.com/a/24544674/2744245
+HALFWIDTH_TO_FULLWIDTH = str.maketrans(
+    '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!"#$%&()*+,-./:;<=>?@[]^_`{|}~',
+    '０１２３４５６７８９ａｂｃｄｅｆｇｈｉｊｋｌｍｎｏｐｑｒｓｔｕｖｗｘｙｚＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯＰＱＲＳＴＵＶＷＸＹＺ！゛＃＄％＆（）＊＋、ー。／：；〈＝〉？＠［］＾＿‘｛｜｝～')
+
+
+def makeFullwidthChar(char):
+    return char.translate(HALFWIDTH_TO_FULLWIDTH)
+
+
+def maybeMakeFullwidthString(string):
+    alter = False
+    final = ""
+    for char in string:
+        width = unicodedata.east_asian_width(char)
+        if width == 'W' or width == 'F':
+            alter = True
+            break
+    if alter:
+        final = final.join(makeFullwidthChar(char) for char in string)
+    else:
+        final = string
+    return final
 
 
 def scrollText():
     text = args.scrolltext.rstrip('\n')
     scroll = True
     # only scroll if text is longer than scrolling area
-    if len(text) <= args.length:
-        scroll = False
+    if args.characterlength:
+        if len(text) <= args.length:
+            scroll = False
+    else:
+        if visualLen(text) <= args.length:
+            scroll = False
     while True:
-        displayedText = (args.beforetext + text[:args.length] +
+        if args.characterlength:
+            midText = text[:args.length]
+        elif args.fullwidth:
+            stopIndex = args.length // 2
+            midText = maybeMakeFullwidthString(text)[:stopIndex]
+        else:
+            midText = makeVisualLen(args.length, text)
+        displayedText = (args.beforetext + midText +
                          args.aftertext)
         if args.newline:
             print(displayedText, flush=True)
