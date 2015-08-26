@@ -6,7 +6,7 @@ setup(name='zscroll',
       description='A text scroller for use with panels',
       author='Lit Wakefield',
       author_email='nocturnalartifice[at]gmail[dot]com',
-      url='https://github.com/angelic-sedition/zscroll',
+      url='https://github.com/noctuid/zscroll',
       license='Simplified BSD',
       # to the bin
       scripts=['zscroll'],

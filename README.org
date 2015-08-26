@@ -8,9 +8,9 @@ $ mpc current | zscroll
 #+end_src
 
 A much zoomed in example (note that the scroll speed can be changed):
-[[http://angelic-sedition.github.io/zscroll][http://angelic-sedition.github.io/zscroll/assets/example_bar.gif]]
+[[http://noctuid.github.io/zscroll][http://noctuid.github.io/zscroll/assets/example_bar.gif]]
 
-For the function I use with bar-aint-recursive see the [[https://github.com/angelic-sedition/dotfiles/blob/a251c682aa71e115ca83e75f938016e2f134ed47/aesthetics/.panel_scripts/panel#L39][corresponding section]] in my panel script. It deals with updating the scroller on state and song changes. Also see [[https://github.com/angelic-sedition/dotfiles/blob/a251c682aa71e115ca83e75f938016e2f134ed47/aesthetics/.panel_scripts/panel#L83][the section]] for scrolling xtitle output as an example.
+For the function I use with bar-aint-recursive see the [[https://github.com/noctuid/dotfiles/blob/a251c682aa71e115ca83e75f938016e2f134ed47/aesthetics/.panel_scripts/panel#L39][corresponding section]] in my panel script. It deals with updating the scroller on state and song changes. Also see [[https://github.com/noctuid/dotfiles/blob/a251c682aa71e115ca83e75f938016e2f134ed47/aesthetics/.panel_scripts/panel#L83][the section]] for scrolling xtitle output as an example.
 
 ** Installation
 *** Arch
@@ -18,7 +18,7 @@ Install [[https://aur.archlinux.org/packages/zscroll-git/][zscroll-git]] from th
 
 *** Manual
 #+begin_src sh
-$ git clone https://github.com/angelic-sedition/zscroll
+$ git clone https://github.com/noctuid/zscroll
 $ cd zscroll
 $ sudo python setup.py install
 #+end_src
