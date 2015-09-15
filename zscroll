@@ -108,9 +108,10 @@ def scrollText():
         displayedText = (args.beforetext + midText +
                          args.aftertext)
         if args.newline:
-            print(displayedText, flush=True)
+            print(displayedText)
         else:
-            print(displayedText, end='\r', flush=True)
+            # pad end with spaces to prevent previous text from still showing
+            print(displayedText.ljust(args.length), end='\r')
         # rotate text
         if scroll:
             text = text[1:] + text[0]
