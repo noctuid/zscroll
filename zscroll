@@ -270,7 +270,7 @@ def printText(displayText):
     if args.newline:
         print(displayText, flush=True)
     else:
-        spaceNum = length + len(beforeText) + len(afterText)
+        spaceNum = length + visualLen(displayText) + visualLen(beforeText)
         print(displayText.ljust(spaceNum), end='\r', flush=True)
 
 
