@@ -32,10 +32,10 @@ parser.add_argument("-d", "--delay", type=float, action="append",
 parser.add_argument("-s", "--scroll", type=int, action="append", default=[1],
                     help="set to 0 to always prevent scrolling; meant to be" +
                     " used with -g (default: 1)")
-parser.add_argument("-g", "--grepsearch", action="append", default=[""],
-                    help="term to search for in grepcommand output to" +
+parser.add_argument("-m", "--matchtext", action="append", default=[""],
+                    help="regexp to search for in matchcommand output to" +
                     " determine whether to change settings (default: none)")
-parser.add_argument("-G", "--grepcommand", action="append", default=[""],
+parser.add_argument("-M", "--matchcommand", action="append", default=[""],
                     help="command(s) to search output of (default: none)")
 # no args
 parser.add_argument("-u", "--updatecheck", action="store_true",
@@ -124,10 +124,10 @@ def maybeMakeFullwidthString(string):
 def userSetDefault(opt):
     """Helper function for setOptionDefaults to determine if a default setting
     was altered by the user."""
-    if len(opt) == 2 and len(args.grepsearch) != 2:
+    if len(opt) == 2 and len(args.matchtext) != 2:
         return True
-    if len(opt) > 1 and (len(args.grepcommand) == 1 or
-                         len(opt) > len(args.grepsearch)):
+    if len(opt) > 1 and (len(args.matchcommand) == 1 or
+                         len(opt) > len(args.matchtext)):
         return True
     else:
         return False
@@ -185,8 +185,8 @@ def updateCheck():
         return False
 
 
-def grepUpdateOptions():
-    """Checks the output of the grepcommand and searches for a regexp to
+def matchUpdateOptions():
+    """Checks the output of the matchcommand and searches for a regexp to
     determine if settings should be updated."""
     global beforeText
     global afterText
@@ -196,14 +196,14 @@ def grepUpdateOptions():
     global scroll
     changedSettings = False
     changedText = False
-    searchText = subprocess.check_output(shlex.split(args.grepcommand[1])) \
+    searchText = subprocess.check_output(shlex.split(args.matchcommand[1])) \
                            .decode(encoding='UTF-8')
     # default always in list so start at index 1
-    for i in range(1, len(args.grepsearch)):
-        if len(args.grepcommand) > 2 and i > 1:
-            searchText = subprocess.check_output(shlex.split(args.grepcommand[i])) \
+    for i in range(1, len(args.matchtext)):
+        if len(args.matchcommand) > 2 and i > 1:
+            searchText = subprocess.check_output(shlex.split(args.matchcommand[i])) \
                                    .decode(encoding='UTF-8')
-        if re.search(args.grepsearch[i], searchText):
+        if re.search(args.matchtext[i], searchText):
             changedSettings = True
             # update only if have more than a default arg
             if len(args.beforetext) > 1 and beforeText != args.beforetext[i]:
@@ -280,8 +280,8 @@ def scrollText():
         if args.updatecheck:
             if updateCheck():
                 newText = True
-        if len(args.grepcommand) > 1:
-            if grepUpdateOptions():
+        if len(args.matchcommand) > 1:
+            if matchUpdateOptions():
                 newText = True
         if newText:
             shiftText = scrollText
@@ -298,10 +298,10 @@ def scrollText():
 
 
 def optNumberIsValid(opt):
-    """Tests whether option is used the same number of times as --grepsearch.
+    """Tests whether option is used the same number of times as --matchtext.
     An option may be specified one more time than -g. In this case the first
     argument becomes the default (see setOptionDefaults)."""
-    searchNum = len(args.grepsearch)
+    searchNum = len(args.matchtext)
     optNum = len(opt)
     if optNum > 2 and optNum != searchNum and optNum != searchNum + 1:
         return False
@@ -313,20 +313,20 @@ def main():
     """Ensures that given arguments are valid and then displays text or
     exits."""
     if len(args.scrolltext) > 0:
-        if len(args.grepsearch) > 1 and len(args.grepcommand) <= 1:
+        if len(args.matchtext) > 1 and len(args.matchcommand) <= 1:
             sys.exit("At least one -G is necessary for -g.")
-        elif len(args.grepcommand) > 2 and \
-                len(args.grepcommand) != len(args.grepsearch):
-            sys.exit("If there is more than one '--grepcommand', the number"
-                     + " must match the number of '--grepsearch's.")
+        elif len(args.matchcommand) > 2 and \
+                len(args.matchcommand) != len(args.matchtext):
+            sys.exit("If there is more than one '--matchcommand', the number"
+                     + " must match the number of '--matchtext's.")
         elif (not optNumberIsValid(args.length) or
                 not optNumberIsValid(args.beforetext) or
                 not optNumberIsValid(args.aftertext) or
                 not optNumberIsValid(args.scrollpadding) or
                 not optNumberIsValid(args.delay) or
                 not optNumberIsValid(args.scroll)):
-            sys.exit("Options specified with a '--grepsearch' must be" +
-                     " specified with all '--grepsearch's. See the man" +
+            sys.exit("Options specified with a '--matchtext' must be" +
+                     " specified with all '--matchtext's. See the man" +
                      " page for more information.")
         try:
             scrollText()
