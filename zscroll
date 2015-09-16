@@ -1,39 +1,69 @@
 #!/usr/bin/env python3
 import sys
 import argparse
-from time import sleep
 import unicodedata
+import subprocess
+import shlex
+import re
+from time import sleep
 
 parser = argparse.ArgumentParser()
 # allow for a positional argument or piping into
 parser.add_argument("scrolltext", nargs="?", help="text to scroll;" +
                     " will print in place if not longer than scroll length;" +
                     " can be read from stdin," +
-                    " e.g 'echo text | zscroll'",
+                    " e.g. 'echo text | zscroll'",
                     default=sys.stdin.read() if not sys.stdin.isatty() else "")
-parser.add_argument("-l", "--length", type=int, default=40,
-                    help="length of scrolling text (default: 40)")
-parser.add_argument("-b", "--beforetext", default="",
-                    help="padding text to be displayed to the " +
+parser.add_argument("-l", "--length", type=int, action="append", default=[40],
+                    help="length of scrolling text not including left and " +
+                    " right padding text (default: 40)")
+parser.add_argument("-b", "--beforetext", action="append", default=[""],
+                    help="stationary padding text to be displayed to the " +
                     "left of the scrolling text (default: \"\")")
-parser.add_argument("-a", "--aftertext", default="",
-                    help="padding text to be displayed to the " +
+parser.add_argument("-a", "--aftertext", action="append", default=[""],
+                    help="stationary padding text to be displayed to the " +
                     "right of the scrolling text (default: \"\")")
-parser.add_argument("-d", "--delay", type=float, default=0.4,
-                    help="delay for scrolling update (default: 0.4)")
+parser.add_argument("-p", "--scrollpadding", default=[" - "], help="padding" +
+                    "text to be displayed between the start and end of the" +
+                    "text only when it is scrolling (default: \" - \")")
+parser.add_argument("-d", "--delay", type=float, action="append",
+                    default=[0.4], help="second delay for scrolling" +
+                    " update; lower for faster scrolling (default: 0.4)")
+parser.add_argument("-s", "--scroll", type=int, action="append", default=[1],
+                    help="set to 0 to always prevent scrolling; meant to be" +
+                    " used with -g (default: 1)")
+parser.add_argument("-g", "--grepsearch", action="append", default=[""],
+                    help="term to search for in grepcommand output to" +
+                    " determine whether to change settings (default: none)")
+parser.add_argument("-G", "--grepcommand", action="append", default=[""],
+                    help="command(s) to search output of (default: none)")
 # no args
+parser.add_argument("-u", "--updatecheck", action="store_true",
+                    help="specifies that the positional argument is a" +
+                    " command that should be checked to determine if the" +
+                    " scroll text should be updated (default: no)")
 parser.add_argument("-n", "--newline", action="store_true",
-                    help="Print a newline after each update (default: no)")
+                    help="print a newline after each update (default: no)")
 parser.add_argument("-c", "--characterlength", action="store_true",
-                    help="Count length by characters instead of considering" +
+                    help="count length by characters instead of considering" +
                     " fullwidth characters to be length 2 (default: no)")
 parser.add_argument("-f", "--fullwidth", action="store_true",
-                    help="If fullwidth characters are found in the given scrolltext," +
+                    help="if fullwidth characters are found in the text," +
                     " convert all characters to be fullwidth (default: no)")
 args = parser.parse_args()
+# using global vars to store current setting (since these args are lists)
+scrollText = None
+beforeText = None
+afterText = None
+scrollPadding = None
+delay = None
+length = None
+scroll = None
 
 
 def visualLen(text):
+    """Determines the length of text by counting wide characters as double
+    length."""
     visualLength = 0
     for char in text:
         width = unicodedata.east_asian_width(char)
@@ -45,6 +75,8 @@ def visualLen(text):
 
 
 def makeVisualLen(chosenLength, text):
+    """Makes text the chosenLength by counting wide characters as double
+    length."""
     visualLength = 0
     final = ""
     for char in text:
@@ -69,10 +101,12 @@ HALFWIDTH_TO_FULLWIDTH = str.maketrans(
 
 
 def makeFullwidthChar(char):
+    """Converts a character to its fullwidth equivalent."""
     return char.translate(HALFWIDTH_TO_FULLWIDTH)
 
 
 def maybeMakeFullwidthString(string):
+    """Converts characters in a string to their fullwidth equivalents."""
     alter = False
     final = ""
     for char in string:
@@ -87,39 +121,213 @@ def maybeMakeFullwidthString(string):
     return final
 
 
-def scrollText():
-    text = args.scrolltext.rstrip('\n')
-    scroll = True
-    # only scroll if text is longer than scrolling area
-    if args.characterlength:
-        if len(text) <= args.length:
-            scroll = False
+def userSetDefault(opt):
+    """Helper function for setOptionDefaults to determine if a default setting
+    was altered by the user."""
+    if len(opt) == 2 and len(args.grepsearch) != 2:
+        return True
+    if len(opt) > 1 and (len(args.grepcommand) == 1 or
+                         len(opt) > len(args.grepsearch)):
+        return True
     else:
-        if visualLen(text) <= args.length:
-            scroll = False
-    while True:
+        return False
+
+
+def setOptionDefaults(firstTime=False):
+    """Sets settings to their defaults. When firstTime is True, this function
+    will ensure that initial defaults are replaced with user-specified defaults
+    when applicable since argparse will always include the fallback value as
+    the initial element(s) when the action is 'append'."""
+    # (https://bugs.python.org/issue16399)
+    global scrollText
+    global beforeText
+    global afterText
+    global scrollPadding
+    global length
+    global delay
+    global scroll
+    if firstTime:
+        if args.updatecheck:
+            scrollText = ""
+        else:
+            scrollText = args.scrolltext.rstrip('\n')
+        # replace index 0 with overriden defaults if they exist
+        if userSetDefault(args.beforetext):
+            del args.beforetext[0]
+        if userSetDefault(args.aftertext):
+            del args.aftertext[0]
+        if userSetDefault(args.scrollpadding):
+            del args.scrollpadding[0]
+        if userSetDefault(args.length):
+            del args.length[0]
+        if userSetDefault(args.delay):
+            del args.delay[0]
+        if userSetDefault(args.scroll):
+            del args.scroll[0]
+    beforeText = args.beforetext[0]
+    afterText = args.aftertext[0]
+    scrollPadding = args.scrollpadding[0]
+    length = args.length[0]
+    delay = args.delay[0]
+    scroll = args.scroll[0]
+
+
+def updateCheck():
+    """Checks output of the command used to obtain the scroll text has changed
+    and updates the scroll text accordingly if it has."""
+    global scrollText
+    compareText = subprocess.check_output(shlex.split(args.scrolltext)) \
+                            .decode(encoding='UTF-8').rstrip('\n')
+    if scrollText != compareText:
+        scrollText = compareText
+        return True
+    else:
+        return False
+
+
+def grepUpdateOptions():
+    """Checks the output of the grepcommand and searches for a regexp to
+    determine if settings should be updated."""
+    global beforeText
+    global afterText
+    global scrollPadding
+    global length
+    global delay
+    global scroll
+    changedSettings = False
+    changedText = False
+    searchText = subprocess.check_output(shlex.split(args.grepcommand[1])) \
+                           .decode(encoding='UTF-8')
+    # default always in list so start at index 1
+    for i in range(1, len(args.grepsearch)):
+        if len(args.grepcommand) > 2 and i > 1:
+            searchText = subprocess.check_output(shlex.split(args.grepcommand[i])) \
+                                   .decode(encoding='UTF-8')
+        if re.search(args.grepsearch[i], searchText):
+            changedSettings = True
+            # update only if have more than a default arg
+            if len(args.beforetext) > 1 and beforeText != args.beforetext[i]:
+                beforeText = args.beforetext[i]
+                changedText = True
+            if len(args.aftertext) > 1 and afterText != args.aftertext[i]:
+                afterText = args.aftertext[i]
+                changedText = True
+            if len(args.scrollpadding) > 1 and \
+                    scrollPadding != args.scrollpadding[i]:
+                scrollPadding = args.scrollpadding[i]
+                changedText = True
+            if len(args.length) > 1 and length != args.length[i]:
+                length = args.length[i]
+                changedText = True
+            if len(args.delay) > 1 and delay != args.delay[i]:
+                delay = args.delay[i]
+            if len(args.scroll) > 1 and scroll != args.scroll[i]:
+                scroll = args.scroll[i]
+    if not changedSettings:
+        setOptionDefaults()
+    return changedText
+
+
+def textIsLongerThanLength():
+    """Determines whether the text is long enough to be scrolled based on the
+    user-specified definition of length."""
+    needsScrolling = True
+    if args.characterlength and len(scrollText) <= length:
+        needsScrolling = False
+    elif args.fullwidth and len(scrollText) * 2 <= length:
+        needsScrolling = False
+    elif visualLen(scrollText) <= length:
+        needsScrolling = False
+    return needsScrolling
+
+
+def buildDisplayText(midText, needsScrolling):
+    """Adds the static left and right padding to the text and ensures that the
+    text is limited to the user-specified length."""
+    needsScrolling = True
+    if needsScrolling:
         if args.characterlength:
-            midText = text[:args.length]
+            midText = midText[:length]
         elif args.fullwidth:
-            stopIndex = args.length // 2
-            midText = maybeMakeFullwidthString(text)[:stopIndex]
+            stopIndex = length // 2
+            midText = maybeMakeFullwidthString(midText)[:stopIndex]
         else:
-            midText = makeVisualLen(args.length, text)
-        displayedText = (args.beforetext + midText +
-                         args.aftertext)
-        if args.newline:
-            print(displayedText)
-        else:
-            # pad end with spaces to prevent previous text from still showing
-            print(displayedText.ljust(args.length), end='\r')
-        # rotate text
-        if scroll:
-            text = text[1:] + text[0]
-        sleep(args.delay)
+            midText = makeVisualLen(length, midText)
+    return beforeText + midText + afterText
+
+
+def printText(displayText):
+    """Prints text either in place, clearing previously displayed text, or on
+    newlines depending on the user's setting."""
+    # flush is necessary for lemonbar (but not in terminal)
+    if args.newline:
+        print(displayText, flush=True)
+    else:
+        spaceNum = length + len(beforeText) + len(afterText)
+        print(displayText.ljust(spaceNum), end='\r', flush=True)
+
+
+def scrollText():
+    """Updates settings as needed and continuously prints text after a delay
+    when the text is long enough to scroll and the user wants it to. Otherwise,
+    the text will be printed once and only updated when it changes."""
+    setOptionDefaults(True)
+    # don't modify global var when shifting; keep for comparison
+    shiftText = scrollText
+    newText = True
+    needsScrolling = False
+    while True:
+        if args.updatecheck:
+            if updateCheck():
+                newText = True
+        if len(args.grepcommand) > 1:
+            if grepUpdateOptions():
+                newText = True
+        if newText:
+            shiftText = scrollText
+            needsScrolling = textIsLongerThanLength()
+            if needsScrolling:
+                shiftText += scrollPadding
+        displayText = buildDisplayText(shiftText, needsScrolling)
+        if scroll and needsScrolling or newText:
+            printText(displayText)
+            newText = False
+        if scroll and needsScrolling:
+            shiftText = shiftText[1:] + shiftText[0]
+        sleep(delay)
+
+
+def optNumberIsValid(opt):
+    """Tests whether option is used the same number of times as --grepsearch.
+    An option may be specified one more time than -g. In this case the first
+    argument becomes the default (see setOptionDefaults)."""
+    searchNum = len(args.grepsearch)
+    optNum = len(opt)
+    if optNum > 2 and optNum != searchNum and optNum != searchNum + 1:
+        return False
+    else:
+        return True
 
 
 def main():
+    """Ensures that given arguments are valid and then displays text or
+    exits."""
     if len(args.scrolltext) > 0:
+        if len(args.grepsearch) > 1 and len(args.grepcommand) <= 1:
+            sys.exit("At least one -G is necessary for -g.")
+        elif len(args.grepcommand) > 2 and \
+                len(args.grepcommand) != len(args.grepsearch):
+            sys.exit("If there is more than one '--grepcommand', the number"
+                     + " must match the number of '--grepsearch's.")
+        elif (not optNumberIsValid(args.length) or
+                not optNumberIsValid(args.beforetext) or
+                not optNumberIsValid(args.aftertext) or
+                not optNumberIsValid(args.scrollpadding) or
+                not optNumberIsValid(args.delay) or
+                not optNumberIsValid(args.scroll)):
+            sys.exit("Options specified with a '--grepsearch' must be" +
+                     " specified with all '--grepsearch's. See the man" +
+                     " page for more information.")
         try:
             scrollText()
         except KeyboardInterrupt:
@@ -128,4 +336,5 @@ def main():
         parser.print_help()
 
 
-if __name__ == "__main__": main()
+if __name__ == "__main__":
+    main()
