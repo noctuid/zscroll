@@ -241,10 +241,12 @@ def textIsLongerThanLength():
     return needsScrolling
 
 
-def buildDisplayText(midText, needsScrolling):
+def buildDisplayText(midText, needsScrolling, lastHiddenWasWide):
     """Adds the static left and right padding to the text and ensures that the
-    text is limited to the user-specified length."""
-    needsScrolling = True
+    text is limited to the user-specified length. When lastHiddenWasWide is
+    true and neither -c or -f has been specified, this function will insert
+    a space at the beginning rather than pull in two new characters (or one
+    wide character) at the end to keep the scroll speed more consistent."""
     if needsScrolling:
         if args.characterlength:
             midText = midText[:length]
@@ -252,7 +254,12 @@ def buildDisplayText(midText, needsScrolling):
             stopIndex = length // 2
             midText = maybeMakeFullwidthString(midText)[:stopIndex]
         else:
-            midText = makeVisualLen(length, midText)
+            if lastHiddenWasWide:
+                # take two updates to phase out a wide char
+                # (just like taking two updates to phase in)
+                midText = makeVisualLen(length, " " + midText)
+            else:
+                midText = makeVisualLen(length, midText)
     return beforeText + midText + afterText
 
 
@@ -276,6 +283,7 @@ def scrollText():
     shiftText = scrollText
     newText = True
     needsScrolling = False
+    lastHiddenWasWide = False
     while True:
         if args.updatecheck:
             if updateCheck():
@@ -285,15 +293,26 @@ def scrollText():
                 newText = True
         if newText:
             shiftText = scrollText
+            lastHiddenWasWide = False
             needsScrolling = textIsLongerThanLength()
             if needsScrolling:
                 shiftText += scrollPadding
-        displayText = buildDisplayText(shiftText, needsScrolling)
+        displayText = buildDisplayText(shiftText, needsScrolling,
+                                       lastHiddenWasWide)
         if scroll and needsScrolling or newText:
             printText(displayText)
             newText = False
         if scroll and needsScrolling:
-            shiftText = shiftText[1:] + shiftText[0]
+            if lastHiddenWasWide and not args.characterlength \
+                    and not args.fullwidth:
+                # don't shift the text for one update
+                lastHiddenWasWide = False
+            else:
+                if visualLen(shiftText[0]) == 2:
+                    lastHiddenWasWide = True
+                else:
+                    lastHiddenWasWide = False
+                shiftText = shiftText[1:] + shiftText[0]
         sleep(delay)
 
 
