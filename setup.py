@@ -11,6 +11,7 @@ setup(name='zscroll',
       # to the bin
       scripts=['zscroll'],
       data_files=[('share/man/man1', ['zscroll.1']),
-                  ('share/licenses/zscroll', ['LICENSE'])
+                  ('share/licenses/zscroll', ['LICENSE']),
+                  ('share/zsh/site-functions', ['completion/_zscroll'])
                   ]
       )

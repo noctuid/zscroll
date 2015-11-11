@@ -1,0 +1,4 @@
+#compdef zscroll
+# This will still try to complete with defaults (files) for the positional arg.
+# I'm not sure if there's a way to override that.
+_gnu_generic
