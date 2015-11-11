@@ -2,7 +2,7 @@
 from distutils.core import setup
 
 setup(name='zscroll',
-      version='0.1',
+      version='1.0',
       description='A text scroller for use with panels',
       author='Lit Wakefield',
       author_email='noct[at]openmailbox[dot]org',
