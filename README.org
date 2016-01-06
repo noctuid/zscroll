@@ -34,6 +34,13 @@ Zscroll intelligently deals with fullwidth characters by default by counting the
 *** Arch
 Install [[https://aur.archlinux.org/packages/zscroll-git/][zscroll-git]] from the AUR.
 
+*** Nix
+[[https://nixos.org/nix/][Nix]] is a distro-independent package manager.
+
+#+begin_src sh
+$ nix-env -i zscroll
+#+end_src
+
 *** Manual
 #+begin_src sh
 $ git clone https://github.com/noctuid/zscroll
