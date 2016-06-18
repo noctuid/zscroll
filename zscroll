@@ -5,6 +5,7 @@ import unicodedata
 import subprocess
 import shlex
 import re
+import time
 from time import sleep
 
 parser = argparse.ArgumentParser()
@@ -37,6 +38,8 @@ parser.add_argument("-m", "--matchtext", action="append", default=[""],
                     " determine whether to change settings (default: none)")
 parser.add_argument("-M", "--matchcommand", action="append", default=[""],
                     help="command(s) to search output of (default: none)")
+parser.add_argument("-t", "--timeout", type=float, action="append", default=[0],
+                    help="Time before closing, value of 0 implies infinite time (default: 0)")
 # no args
 parser.add_argument("-u", "--updatecheck", action="store_true",
                     help="specifies that the positional argument is a" +
@@ -59,6 +62,7 @@ scrollPadding = None
 delay = None
 length = None
 scroll = None
+timeout = None
 
 
 def visualLen(text):
@@ -146,6 +150,7 @@ def setOptionDefaults(firstTime=False):
     global length
     global delay
     global scroll
+    global timeout
     if firstTime:
         if args.updatecheck:
             scrollText = ""
@@ -164,12 +169,15 @@ def setOptionDefaults(firstTime=False):
             del args.delay[0]
         if userSetDefault(args.scroll):
             del args.scroll[0]
+        if userSetDefault(args.timeout):
+            del args.timeout[0]
     beforeText = args.beforetext[0]
     afterText = args.aftertext[0]
     scrollPadding = args.scrollpadding[0]
     length = args.length[0]
     delay = args.delay[0]
     scroll = args.scroll[0]
+    timeout = args.timeout[0]
 
 
 def updateCheck():
@@ -284,7 +292,10 @@ def scrollText():
     newText = True
     needsScrolling = False
     lastHiddenWasWide = False
+    timeend = time.time() + timeout
     while True:
+        if time.time() > timeend and timeout > 0:
+            break;
         if args.updatecheck:
             if updateCheck():
                 newText = True
@@ -343,7 +354,8 @@ def main():
                 not optNumberIsValid(args.aftertext) or
                 not optNumberIsValid(args.scrollpadding) or
                 not optNumberIsValid(args.delay) or
-                not optNumberIsValid(args.scroll)):
+                not optNumberIsValid(args.scroll) or
+                not optNumberIsValid(args.timeout)):
             sys.exit("Options specified with a '--matchtext' must be" +
                      " specified with all '--matchtext's. See the man" +
                      " page for more information.")
