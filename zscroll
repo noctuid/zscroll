@@ -9,51 +9,116 @@ import time
 from time import sleep
 
 parser = argparse.ArgumentParser()
+
 # allow for a positional argument or piping into
-parser.add_argument("scrolltext", nargs="?", help="text to scroll;" +
-                    " will print in place if not longer than scroll length;" +
-                    " can be read from stdin," +
-                    " e.g. 'echo text | zscroll'",
-                    default=sys.stdin.read() if not sys.stdin.isatty() else "")
-parser.add_argument("-l", "--length", type=int, action="append", default=[40],
-                    help="length of scrolling text not including left and " +
-                    " right padding text (default: 40)")
-parser.add_argument("-b", "--beforetext", action="append", default=[""],
-                    help="stationary padding text to be displayed to the " +
-                    "left of the scrolling text (default: \"\")")
-parser.add_argument("-a", "--aftertext", action="append", default=[""],
-                    help="stationary padding text to be displayed to the " +
-                    "right of the scrolling text (default: \"\")")
-parser.add_argument("-p", "--scrollpadding", action="append", default=[" - "],
-                    help="padding text to be displayed between the start " +
-                    "and end of the text only when it is scrolling " +
-                    "(default: \" - \")")
-parser.add_argument("-d", "--delay", type=float, action="append",
-                    default=[0.4], help="second delay for scrolling" +
-                    " update; lower for faster scrolling (default: 0.4)")
-parser.add_argument("-s", "--scroll", type=int, action="append", default=[1],
-                    help="set to 0 to always prevent scrolling; meant to be" +
-                    " used with -g (default: 1)")
-parser.add_argument("-m", "--matchtext", action="append", default=[""],
-                    help="regexp to search for in matchcommand output to" +
-                    " determine whether to change settings (default: none)")
-parser.add_argument("-M", "--matchcommand", action="append", default=[""],
-                    help="command(s) to search output of (default: none)")
-parser.add_argument("-t", "--timeout", type=float, action="append", default=[0],
-                    help="Time before closing, value of 0 implies infinite time (default: 0)")
+parser.add_argument(
+    "scrolltext", nargs="?",
+    default=sys.stdin.read() if not sys.stdin.isatty() else "",
+    help="""
+         text to scroll; will print in place if not longer than -l scroll
+         length; can be read from stdin, e.g. echo text | zscroll
+         """
+)
+
+parser.add_argument(
+    "-l", "--length", type=int, action="append", default=[40],
+    help="""
+         length of scrolling text not including left and right padding text
+         (default: 40)
+         """
+)
+
+parser.add_argument(
+    "-b", "--beforetext", action="append", default=[""],
+    help="""
+         stationary padding text to be displayed to the left of the scrolling
+         text (default: "")
+         """
+)
+
+parser.add_argument(
+    "-a", "--aftertext", action="append", default=[""],
+    help="""
+         stationary padding text to be displayed to the right of the scrolling
+         text (default: "")
+         """
+)
+
+parser.add_argument(
+    "-p", "--scrollpadding", action="append", default=[" - "],
+    help="""
+         padding text to be displayed between the start and end of the
+         scrolltext only when it is scrolling (default: " - ")
+         """
+)
+
+parser.add_argument(
+    "-d", "--delay", type=float, action="append", default=[0.4],
+    help="""
+         second delay for scrolling update; lower for faster scrolling
+         (default: 0.4)
+         """
+)
+
+parser.add_argument(
+    "-s", "--scroll", type=int, action="append", default=[1],
+    help="""
+         set to 0 to always prevent scrolling; meant to be used with -g
+         (default: 1)
+         """
+)
+
+parser.add_argument(
+    "-m", "--matchtext", action="append", default=[""],
+    help="""
+         regexp to search for in matchcommand output to determine whether to
+         change settings (default: none)
+         """
+)
+
+parser.add_argument(
+    "-M", "--matchcommand", action="append", default=[""],
+    help="command(s) to search output of (default: none)"
+)
+
+parser.add_argument(
+    "-t", "--timeout", type=float, action="append", default=[0],
+    help="""
+         Time before closing, value of 0 implies infinite time (default: 0)
+         """
+)
+
 # no args
-parser.add_argument("-u", "--updatecheck", action="store_true",
-                    help="specifies that the positional argument is a" +
-                    " command that should be checked to determine if the" +
-                    " scroll text should be updated (default: no)")
-parser.add_argument("-n", "--newline", action="store_true",
-                    help="print a newline after each update (default: no)")
-parser.add_argument("-c", "--characterlength", action="store_true",
-                    help="count length by characters instead of considering" +
-                    " fullwidth characters to be length 2 (default: no)")
-parser.add_argument("-f", "--fullwidth", action="store_true",
-                    help="if fullwidth characters are found in the text," +
-                    " convert all characters to be fullwidth (default: no)")
+parser.add_argument(
+    "-u", "--updatecheck", action="store_true",
+    help="""
+         specifies that the positional argument is a command that should be
+         checked to determine if the scrolltext should be updated (default:
+         false)
+         """
+)
+
+parser.add_argument(
+    "-n", "--newline", action="store_true",
+    help="print a newline after each update (default: false)"
+)
+
+parser.add_argument(
+    "-c", "--characterlength", action="store_true",
+    help="""
+         count length by characters instead of considering fullwidth characters
+         to be length 2 (default: no)
+         """
+)
+
+parser.add_argument(
+    "-f", "--fullwidth", action="store_true",
+    help="""
+         if fullwidth characters are found in the text, convert all characters
+         to be fullwidth (default: no)
+         """
+)
+
 args = parser.parse_args()
 # using global vars to store current setting (since these args are lists)
 scrollText = None
