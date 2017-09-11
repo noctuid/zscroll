@@ -24,9 +24,10 @@ parser.add_argument("-b", "--beforetext", action="append", default=[""],
 parser.add_argument("-a", "--aftertext", action="append", default=[""],
                     help="stationary padding text to be displayed to the " +
                     "right of the scrolling text (default: \"\")")
-parser.add_argument("-p", "--scrollpadding", default=[" - "], help="padding" +
-                    "text to be displayed between the start and end of the" +
-                    "text only when it is scrolling (default: \" - \")")
+parser.add_argument("-p", "--scrollpadding", action="append", default=[" - "],
+                    help="padding text to be displayed between the start " +
+                    "and end of the text only when it is scrolling " +
+                    "(default: \" - \")")
 parser.add_argument("-d", "--delay", type=float, action="append",
                     default=[0.4], help="second delay for scrolling" +
                     " update; lower for faster scrolling (default: 0.4)")
