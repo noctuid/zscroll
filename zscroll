@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""A text scroller for panels or terminals"""
 import sys
 import argparse
 import unicodedata
@@ -8,7 +9,7 @@ import re
 import time
 from time import sleep
 
-parser = argparse.ArgumentParser()
+parser = argparse.ArgumentParser()  # pylint: disable-msg=C0103
 
 # allow for a positional argument or piping into
 parser.add_argument(
@@ -119,76 +120,121 @@ parser.add_argument(
          """
 )
 
+# pylint: disable-msg=C0103
 args = parser.parse_args()
 # using global vars to store current setting (since these args are lists)
-scrollText = None
-beforeText = None
-afterText = None
-scrollPadding = None
+scroll_text = None
+before_text = None
+after_text = None
+scroll_padding = None
 delay = None
 length = None
 scroll = None
 timeout = None
+# pylint: enable-msg=C0103
 
 
-def visualLen(text):
-    """Determines the length of text by counting wide characters as double
-    length."""
-    visualLength = 0
+# * Helper Functions
+def visual_len(text):
+    """Determine the "visual" length of text.
+
+    Halfwidth characters are counted as length 1 and fullwidth characters are
+    counted as length 2.
+
+    :param text: the text to examine
+    :type text: string
+
+    :return: the visual length of the text
+    :rtype: integer
+    """
+    visual_length = 0
     for char in text:
         width = unicodedata.east_asian_width(char)
         if width == 'W' or width == 'F':
-            visualLength += 2
+            visual_length += 2
         else:
-            visualLength += 1
-    return visualLength
+            visual_length += 1
+    return visual_length
 
 
-def makeVisualLen(chosenLength, text):
-    """Makes text the chosenLength by counting wide characters as double
-    length."""
-    visualLength = 0
-    final = ""
+def make_visual_length(desired_visual_length, text):
+    """Coerce the text to the given "visual" length.
+
+    The text is assumed to be longer than desired length and will be altered by
+    removing end characters and potentially adding a space at the end to reach
+    the exact desired length.
+
+    :param desired_visual_length: the desired visual length
+    :type desired_visual_length: integer
+
+    :param text: the text to modify
+    :type text: string
+
+    :return: the altered text
+    :rtype: string
+    """
+    visual_length = 0
+    altered_text = ""
     for char in text:
-        if visualLength < chosenLength:
+        if visual_length < desired_visual_length:
             width = unicodedata.east_asian_width(char)
             if width == 'W' or width == 'F':
-                visualLength += 2
+                visual_length += 2
             else:
-                visualLength += 1
-            final += char
+                visual_length += 1
+            altered_text += char
         else:
             break
-    if visualLength == chosenLength + 1:
-        final = final[:-1] + " "
-    return final
+    if visual_length == desired_visual_length + 1:
+        # remove final wide character and add a single space as padding
+        altered_text = altered_text[:-1] + " "
+    return altered_text
 
 
+# left in for backwards compatability; use of -f is not recommended
 # http://stackoverflow.com/a/24544674/2744245
 HALFWIDTH_TO_FULLWIDTH = str.maketrans(
     '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!"#$%&()*+,-./:;<=>?@[]^_`{|}~',
     '０１２３４５６７８９ａｂｃｄｅｆｇｈｉｊｋｌｍｎｏｐｑｒｓｔｕｖｗｘｙｚＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯＰＱＲＳＴＵＶＷＸＹＺ！゛＃＄％＆（）＊＋、ー。／：；〈＝〉？＠［］＾＿‘｛｜｝～')
 
 
-def makeFullwidthChar(char):
-    """Converts a character to its fullwidth equivalent."""
+def make_full_width_char(char):
+    """Convert a character to its fullwidth equivalent.
+
+    :param char: the character to convert
+    :type char: string
+
+    :return: the converted character
+    :rtype: string
+    """
     return char.translate(HALFWIDTH_TO_FULLWIDTH)
 
 
-def maybeMakeFullwidthString(string):
-    """Converts characters in a string to their fullwidth equivalents."""
+def maybe_make_full_width_string(text):
+    """Maybe convert the text to entirely fullwidth characters.
+
+    This conversion only occurs if there is one or more fullwidth characters
+    already in the text.
+
+    :param text: text to examine/convert
+    :type text: string
+
+    :return: the (potentially) altered text
+    :rtype: string
+    """
     alter = False
-    final = ""
-    for char in string:
+    final_text = ""
+    for char in text:
         width = unicodedata.east_asian_width(char)
         if width == 'W' or width == 'F':
             alter = True
             break
     if alter:
-        final = final.join(makeFullwidthChar(char) for char in string)
+        final_text = final_text.join(make_full_width_char(char)
+                                     for char in text)
     else:
-        final = string
-    return final
+        final_text = text
+    return final_text
 
 
 def userSetDefault(opt):
