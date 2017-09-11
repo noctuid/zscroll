@@ -1,6 +1,15 @@
 * Zscroll
+The most common use cases are described in this README. For complete information on every flag, please see the man page (or the help text for basic information on every flag).
+
+** Version 2.0 Breaking Changes
+- Long options are now hyphenated (e.g. =--update-check=)
+- All boolean options take an argument (e.g. =--scroll false=)
+- Newlines will be used by default (=--newline= defaults to true) as zscroll's primary use case is for panels, and this is behavior necessary for scrolling to work with polybar and lemonbar.
+- =-m= / =-M= syntax has changed to eliminate the previous complicated rules
+- The =-f= and =-c= flags have been removed. I don't see them as having a legitimate use case (the default behavior for handling fullwidth characters is much saner), but if anyone would like them back, feel free to make an issue.
+
 ** Simple Example
-~-n~ is needed when using with lemonbar (bar-aint-recursive) or polybar:
+Scroll the currently playing mpd song:
 #+begin_src sh
 $ zscroll -b "⮕ " "$(mpc current)"
 # or
@@ -30,25 +39,26 @@ $ sudo python setup.py install
 #+end_src
 
 ** Dynamically Updating Text
-Zscroll can now update its text by itself. This may be nice for panels that don't allow for the user to conditionally start new processes. It also simplifies the logic necessary to change settings for the scrolling text and gets rid of the need for an [[https://github.com/noctuid/dotfiles/blob/a251c682aa71e115ca83e75f938016e2f134ed47/aesthetics/.panel_scripts/panel#L39][ugly function]] to repeatedly kill and start the scroller for lemonbar. Using zscroll to prevent this may even save some battery. I can't say for certain that the change is significant because of how inconsistently powertop displays my panel's power usage though. See my [[https://github.com/noctuid/dotfiles/blob/1a922f6fbea9137cb5143d789d494d6c9ba29947/not_in_use/.panel_scripts/panel#L16][old panel script]] for examples of using zscroll with lemonbar.
+Zscroll can now update its text by itself. This may be nice for panels that don't allow for the user to conditionally start new processes. It also simplifies the logic necessary to change settings for the scrolling text and gets rid of the need for an [[https://github.com/noctuid/dotfiles/blob/a251c682aa71e115ca83e75f938016e2f134ed47/aesthetics/.panel_scripts/panel#L39][ugly function]] to repeatedly kill and start the scroller.
 
-A simple use case is where one might to display the current window's title. This can be done with the ~-u~ option, which will run zscroll's positional argument as a command to check for changes:
+A simple use case is where one might want to display the current window's title. This can be done with the ~-u~ option, which will run zscroll's positional argument as a shell command to check for changes:
 #+begin_src sh
-$ zscroll -b "| " -a " |" -u "xtitle"
+$ zscroll -b "| " -a " |" -u true "xtitle"
 #+end_src
 
-Zscroll even supports more complex updates by searching for a regular expression in the output of a command to determine whether certain settings can be changed. As an example, this can be useful for displaying a pause icon and prevent scrolling when the current song is paused. The following command will take these actions when "paused" is found in the output of the command ~mpc status~:
+Zscroll even supports more complex updates by searching for a regular expression in the output of a command to determine whether certain settings should be changed. As an example, this can be useful for displaying a pause icon and prevent scrolling when the current song is paused. The following command will take these actions when "paused" is found in the output of the shell command ~mpc status~:
 #+begin_src sh
-$ zscroll -d 0.2 -n -u -b "⮕ x" -M "mpc status" -m "playing" -b "⮕ " -s 1 \
-	-m "paused" -b "⮔ " -s 0 "mpc current"
+$ zscroll -u t -b "♪ x" -d 0.3 -M "mpc status" -m "playing" \
+		"-b ' '" -m "paused" "-b ' ' -s 0" "mpc current"
 #+end_src
 
-There are some caveats. If you are only using one ~-m~ search term and want to set a default for an option, you must specify that option twice (once for the default and once for the ~-m~). This does not apply if you have more than one ~-m~ (meaning if you set an option only once it will be used as a default and not with any specific ~-m~). Also, if an option is specified with any ~-m~, it must be specified for all of them. Any option that takes an argument can be altered when a ~-m~ search term is found. Note that when multiple ~-m~ options happen to be matched, it is the last one that will take effect.
+New options (and possibly new scroll-text) should be specified as the second argument to every =-m=. Options not specified with an =-m= will default to the user-specified values outside of the =-m= (or the base defaults). Any option can be altered when a ~-m~ search term is found (except for =-m= and =-M=, which will be ignored). Note that when multiple ~-m~ options happen to be matched, it is the last one that will take effect. 
 
-Any option that takes an argument can (bpm)See the man page for more information.
+See the man page for more information.
 
 ** Fullwidth Characters
-Zscroll intelligently deals with fullwidth characters by default by counting them as twice the length of halfwidth characters. This ensures that the actual visual length of the scrolling text does not change. Here is a normal-sized gif of the above command that demonstrates this:
+Zscroll intelligently deals with fullwidth characters by default by counting them as twice the length of halfwidth characters (and phasing them in and out in two steps). This ensures that the actual visual length and speed of the scrolling text does not change. Here is a normal-sized gif of the above command that demonstrates this:
+
 [[http://noctuid.github.io/zscroll/assets/music_scroll.gif][http://noctuid.github.io/zscroll/assets/music_scroll.gif]]
 
 ** Use with Polybar
@@ -68,8 +78,8 @@ In the script:
 #+begin_src shell
 #!/usr/bin/env bash
 
-zscroll -n -u -b "♪ x" -d 0.3 -M "mpc status" -m "playing" -b " " \
-	-s 1 -m "paused" -b " " -s 0 "mpc current" &
+zscroll -u true -b "♪ x" -d 0.3 -M "mpc status" -m "playing" \
+		"-b ' '" -m "paused" "-b ' ' -s false" "mpc current" &
 
 wait
 #+end_src
@@ -81,8 +91,8 @@ For an alternate method that does not use zscroll's dynamic updating, see [[http
 - benghaem's [[https://github.com/benghaem/dotfiles/blob/1dcbee5ed235a8e319dcc4255df10f0a6b23b6fe/bin/panel/scroller.c][scroller]]
 
 ** Why
-I was using benghaem's scroller for a while. I didn't like that the arguments were all positional, the lack of a right text padding option, and the lack of an option to change the scroll speed. I just found skroll which is nicer since it has options and an actual manpage and is in the AUR. However, it doesn't have a left text option which is necessary for my bar script to work properly. Also, they are both written in c, which doesn't seem practical to me for such a simple script.
+I was using benghaem's scroller for a while. I didn't like that the arguments were all positional, the lack of a right text padding option, and the lack of an option to change the scroll speed. I found skroll afterwards which is nicer since it has options and an actual man page and is in the AUR. However, it doesn't have a left text padding option which was necessary for my bar script to work properly. Also, they are both written in C, which doesn't seem practical to me for such a simple script and is the main reason I created zscroll instead of contributing.
 
-Zscroll supports the features I liked from each. It has a speed option, adds an option for right padding text, and will work on text as an argument or piped into it.
+Zscroll supports the features I liked from each. It has a speed option, adds an option for right padding text, will work on text as an argument or piped into it, handles fullwidth characters intelligently, and has other advanced features.
 
-I called this zscroll because it's the last scroller I'll use.. but more importantly because I couldn't think of another name.
+I called this zscroll because it's the last scroller I'll use... but more importantly because I couldn't think of another name.

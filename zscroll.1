@@ -1,74 +1,79 @@
 .\" Manpage for zscroll.
-.\" Contact <noct[at]openmailbox[dot]org> to correct errors or typos.
+.\" Please make an issue on the online repository if you find errors or typos.
 .TH ZSCROLL 1 "11 MARCH 2015" "zscroll 1.0" "zscroll man page"
 .SH NAME
-zscroll \- scroll text for panels
+zscroll - A text scroller for panels or terminals 
 .SH SYNOPSIS
-zscroll [\fIOPTIONS\fR] [scrolltext or command]
+zscroll [\fIOPTIONS\fR] [scroll-text or shell command]
 .SH DESCRIPTION
 Zscroll is used to create continuously scrolling text (e.g. in a panel). The text to scroll can be piped into zscroll or given as a positional argument. Zscroll allows for dynamically updating what text is scrolled without having to start a new zscroll instance.
+.SH BOOLEAN VALUES
+Boolean arguments can be specified in all common ways and in upper, lower, or mixed case (true, t, yes, y, and 1; false, f, no, n, and 0).
 .SH OPTIONS
 .TP
-\fB\-h\fR, \fB \-\-help\fR
+\fB-h\fR, \fB --help\fR
 Print help text.
 .TP
-\fB\-l\fR, \fB \-\-length\fR
+\fB-l LENGTH\fR, \fB --length=LENGTH\fR
 Specify a character length for the text to be scrolled in. If the text given is less than this length, zscroll will not scroll it but just print in place. (default: 40)
 .TP
-\fB\-b\fR, \fB \-\-beforetext\fR
+\fB-b PADDING\fR, \fB --before-text=PADDING\fR
 Specify static padding text that will always be displayed to the left of the scrolling section. (default: "")
 .TP
-\fB\-a\fR, \fB \-\-aftertext\fR
+\fB-a PADDING\fR, \fB --after-text=PADDING\fR
 Specify static padding text that will always be displayed to the right of the scrolling section. (default: "")
 .TP
-\fB\-p\fR, \fB \-\-scrollpadding\fR
+\fB-p PADDING\fR, \fB --scroll-padding=PADDING\fR
 Specify padding text that will be displayed in between the start and end of displayed text only when it is scrolling. (default: " - ")
 .TP
-\fB\-s\fR, \fB \-\-scroll\fR
-Specify whether or not the text should be scrolled as an int. If 0, the text will never be scrolled even if it is long enough. This command is primarily meant for use with \-m. (default: 1)
+\fB-s BOOL\fR, \fB --scroll=BOOL\fR
+Specify whether or not the text should be scrolled. If false, the text will never be scrolled even if it is long enough. This command is primarily meant for use with -m. (default: true)
 .TP
-\fB\-m\fR, \fB \-\-matchtext\fR
-Specify a regexp search term to look for in the output of the corresponding "matchcommand". When found, the settings will be changed. Using this command allows the user to specify any option that takes an argument multiple times. There are some rules that must be taken into consideration for this option to work properly. Generally, the nth time an option is specified will correspond to the nth time an '-m' is specified, so if an option is specified with any '-m', it must be specified for all of them. The user may also specify a default setting for an option that will be used when no text is matched. In this case, the nth+1 time an option is specified will correspond to the nth '-m'. If only one '-m' is used, the user should specify an option twice if they want to use it as a default (the first will be used as the default). However, if there are multiple '-m' options and the user only wants to set a default, it is fine to specify that option only once. Confusion can be avoided by ordering the options in a clear way; see the examples below.  (default: none)
+\fB-m REGEXP OPTIONS\fR, \fB --match-text REGEXP OPTIONS\fR
+Specify a regexp search term to look for in the output of the corresponding --match-command. When found, the settings will be changed. Using this flag allows the user to specify any option (besides -m and -M, which will be ignored) and optionally the positional scroll-text argument multiple times. Settings that are not specified will default to the user-specified values outside of the --match-text or the base defaults (when those options were not set by the user). (default: none)
 .TP
-\fB\-M\fR, \fB \-\-matchcommand\fR
-Specify a command to search the output of. This option is required for '-m' to work. The user can either specify one '-M' for all '-m' searches or an equal number of both. (default: none)
+\fB-M COMMAND\fR, \fB --match-command=COMMAND\fR
+Specify a command to search the output of. This option is required for -m to work. The user can either specify one -M for all -m searches or an equal number of both. (default: none)
 .TP
-\fB\-d\fR, \fB \-\-delay\fR
+\fB-d TIME\fR, \fB --delay=TIME\fR
 Specify the delay between scroll steps. (default: 0.4)
 .TP
-\fB\-u\fR, \fB \-\-updatecheck\fR
-Specify that the positional argument refers to a command that should be run to obtain the text to scroll. Whenever the output of this command changes, the text will be updated accordingly. Takes no argument. (default: false)
+\fB-u BOOL\fR, \fB --update-check=BOOL\fR
+Specify that the positional argument refers to a command that should be run to obtain the text to scroll. Whenever the output of this command changes, the text will be updated accordingly. (default: false)
 .TP
-\fB\-n\fR, \fB \-\-newline\fR
-Add a newline after every update/step. Takes no argument. (default: false)
+\fB-n BOOL\fR, \fB --newline=BOOL\fR
+Add a newline after every update/step (may be necessary for use with panels). Takes no argument. (default: true)
 .TP
-\fB\-c\fR, \fB \-\-characterlength\fR
-You probably do not want to use this option. By default, zscroll will count full width characters (e.g. Japanese and Chinese characters) as length two since with fixed-width fonts these characters will be twice as long as normal letters. This prevents a bug where the visual length of the scrolling text will become larger when full width characters appear, leaving characters left over and stuck at the end where the full width characters used to be. This option disables this behaviour and will determine length by character count instead. Takes no argument. (default: false)
-.TP
-\fB\-f\fR, \fB \-\-fullwidth\fR
-You probably do not want to use this option. This option provides a different way of dealing with fullwidth characters. If fullwidth characters are detected in the string to be scrolled, it will convert normal ascii characters to the fullwidth equivalents, making all characters to be equal width. This may make the characters look uglier, but unlike the default behaviour, spaces will not be used as padding at the beginning and end when phasing fullwidth characters in and out. This cannot be used with the '-c' option or it will have no effect. Also note that all characters will be counted as visual length two, so if the '-l' argument is an odd number, the scrolling text will be the same as if the '-l' was one less. Takes no argument. (default: false)
-.TP
-\fB\-t\fR, \fB \-\-timeout\fR
-Time in seconds before closing. An argument of zero implies infinite duration. (default: 0)
+\fB\-t TIME\fR, \fB \-\-timeout=TIME\fR
+Time in seconds to run before closing. An argument of zero implies infinite duration. (default: 0)
 .SH EXAMPLES
+These examples are meant for testing in the terminal (remove the "-n false" for use with panels).
+
 Scroll currently playing mpd song with mpc:
 .br
-$ zscroll -b "playing: " "$(mpc current)"
+$ zscroll -n false -b "playing: " "$(mpc current)"
+
+Continually update the playing song:
 .br
+$ zscroll -n false -u true -b "playing: " "mpc current"
 
 You can also pipe into zscroll:
 .br
 $ xtitle | zscroll -l 60
 
-To prevent confusing when using '-m', the user might want to put defaults before any '-m's and specify the settings to be changed immediately after '-m's:
-$ zscroll -n -u -b "⮕ x" -M "mpc status" -m "playing" -b "⮕ " -s 1 -m "paused" -b "⮔ " -s 0 "mpc current"
- In this case, the default '-s' is not altered, but the default '-b' is.
+An example that will stop scrolling the song when it is paused and change the before padding text depending on the state of the song:
+.br
+$ zscroll -n f -u t -b "x" -d 0.3 -M "mpc status" -m "playing" \\
+.br
+	"-b 'playing: '" -m "paused" "-b 'paused: ' -s f" "mpc current" &
+
+Note that settings specified with an -m will only apply if that text was just matched. In this case, the default -s is not altered, but the default -b is.
 
 .SH SEE ALSO
-lemonbar(1)
+lemonbar(1), polybar(1)
 .SH BUGS
-If you encounter any bugs, please make an issue on the github page.
+If you encounter any bugs, please make an issue on the online repository's bug tracker.
 .SH AUTHOR
-Lit Wakefield <noct[at]openmailbox[dot]org>
+Fox Kiester <noct@openmailbox\&.org>
 .br
 Source: https://github.com/noctuid/zscroll
