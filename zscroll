@@ -189,14 +189,22 @@ def make_visual_len(desired_visual_length, text):
 def shell_output(command):
     """Get the output of a shell command as a string.
 
+    If the command fails, return "".  This is useful in certain cases where a
+    command may not work initially but will work later so that zscroll does not
+    need to be restarted (e.g. mpc command fails because mpd is not yet
+    running).
+
     :param command: the command to run
     :type command: str
 
     :return: the command output
     :rtype: str
     """
-    return subprocess.check_output(shlex.split(command)) \
-                     .decode(encoding='UTF-8').rstrip('\n')
+    try:
+        return subprocess.check_output(shlex.split(command)) \
+                         .decode(encoding='UTF-8').rstrip('\n')
+    except subprocess.CalledProcessError:
+        return ""
 
 
 def update_check():
