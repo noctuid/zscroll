@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """A text scroller for panels or terminals"""
 import argparse
-import distutils.util
-import re
-import shlex
-import subprocess
 import sys
-import time
-import unicodedata
+from distutils.util import strtobool
+from re import search
+from shlex import split
+from subprocess import CalledProcessError, check_output
+from time import sleep, time
+from unicodedata import east_asian_width
 
 
 def str_to_bool(string):
@@ -21,7 +21,7 @@ def str_to_bool(string):
     :return: the boolean interpretation of the string
     :rtype: bool
     """
-    return bool(distutils.util.strtobool(string.lower()))
+    return bool(strtobool(string.lower()))
 
 
 # pylint: disable-msg=C0103
@@ -143,7 +143,7 @@ def visual_len(text):
     """
     visual_length = 0
     for char in text:
-        width = unicodedata.east_asian_width(char)
+        width = east_asian_width(char)
         if width == 'W' or width == 'F':
             visual_length += 2
         else:
@@ -170,7 +170,7 @@ def make_visual_len(desired_visual_length, text):
     altered_text = ""
     for char in text:
         if visual_length < desired_visual_length:
-            width = unicodedata.east_asian_width(char)
+            width = east_asian_width(char)
             if width == 'W' or width == 'F':
                 visual_length += 2
             else:
@@ -201,9 +201,9 @@ def shell_output(command):
     :rtype: str
     """
     try:
-        return subprocess.check_output(shlex.split(command)) \
-                         .decode(encoding='UTF-8').rstrip('\n')
-    except subprocess.CalledProcessError:
+        return check_output(split(command)) \
+            .decode(encoding='UTF-8').rstrip('\n')
+    except CalledProcessError:
         return ""
 
 
@@ -247,8 +247,8 @@ def match_update_args():
     for i in range(len(args.match_text)):
         if len(args.match_command) > 1 and i > 0:
             search_text = shell_output(args.match_command[i])
-        if re.search(args.match_text[i][0], search_text):
-            match_args = parser.parse_args(shlex.split(args.match_text[i][1]))
+        if search(args.match_text[i][0], search_text):
+            match_args = parser.parse_args(split(args.match_text[i][1]))
             if match_args.before_text != args.before_text \
                or match_args.after_text != args.after_text \
                or match_args.scroll_padding != args.scroll_padding \
@@ -308,9 +308,9 @@ def zscroll():
     needs_scrolling = False
     last_hidden_was_wide = False
     next_hidden_is_wide = True
-    end_time = time.time() + args.timeout
+    end_time = time() + args.timeout
     while True:
-        if args.timeout and time.time() > end_time:
+        if args.timeout and time() > end_time:
             break
         if (len(args.match_command) >= 1 and match_update_args()) \
            or (args.update_check and update_check()):
@@ -345,7 +345,7 @@ def zscroll():
                 else:
                     last_hidden_was_wide = visual_len(shift_text[0]) == 2
                     shift_text = shift_text[1:] + shift_text[0]
-        time.sleep(args.delay)
+        sleep(args.delay)
 
 
 def pre_parse_args():
@@ -420,7 +420,7 @@ def main():
     validate_args(initial_args)
     for arg_string in args.match_text:
         arg_string = arg_string[1]
-        match_args = parser.parse_args(shlex.split(arg_string))
+        match_args = parser.parse_args(split(arg_string))
         # -m and -M should never be altered
         # ignore them if the user tries to alter them even if they are wrong
         match_args.match_command = initial_args.match_command
