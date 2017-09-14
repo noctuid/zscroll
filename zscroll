@@ -44,6 +44,11 @@ parser.add_argument(
 )
 
 parser.add_argument(
+    "-r", "--reverse", type=str_to_bool, default=False,
+    help="whether to scroll the text from left to right (default: false)"
+)
+
+parser.add_argument(
     "-b", "--before-text", default="",
     help="""
          stationary padding text to display to the left of the scroll-text
@@ -245,7 +250,7 @@ def match_update_args():
     return text_was_updated
 
 
-def build_display_text(text, needs_scrolling, last_hidden_was_wide):
+def build_display_text(text, needs_scrolling, pad_with_space):
     """Shorten text if necessary and add static left and right padding to it.
 
     :param text: the text to add the left and right padding to
@@ -254,20 +259,17 @@ def build_display_text(text, needs_scrolling, last_hidden_was_wide):
     :param needs_scrolling: whether the text is long enough to be scrolled
     :type needs_scrolling: bool
 
-    :param last_hidden_was_wide: whether the last character that was hidden was
-        fullwidth
-    :type last_hidden_was_wide: bool
+    :param pad_with_space: whether to pad the beginning with a space (used when
+        phasing in or out a fullwidth character)
+    :type pad_with_space: bool
 
     :return: the altered text
     :rtype: str
     """
     if needs_scrolling:
-        if last_hidden_was_wide:
-            # take two updates to phase out a wide char
-            # (just like taking two updates to phase in)
-            text = make_visual_len(args.length, " " + text)
-        else:
-            text = make_visual_len(args.length, text)
+        if pad_with_space:
+            text = " " + text
+        text = make_visual_len(args.length, text)
     return args.before_text + text + args.after_text
 
 
@@ -297,6 +299,7 @@ def zscroll():
     text_is_new = True
     needs_scrolling = False
     last_hidden_was_wide = False
+    next_hidden_is_wide = True
     end_time = time.time() + args.timeout
     while True:
         if args.timeout and time.time() > end_time:
@@ -307,11 +310,13 @@ def zscroll():
         if text_is_new:
             shift_text = scroll_text
             last_hidden_was_wide = False
+            next_hidden_is_wide = False
             needs_scrolling = visual_len(scroll_text) > args.length
             if needs_scrolling:
                 shift_text += args.scroll_padding
         display_text = build_display_text(shift_text, needs_scrolling,
-                                          last_hidden_was_wide)
+                                          (last_hidden_was_wide
+                                           or next_hidden_is_wide))
         if args.scroll and needs_scrolling or text_is_new:
             print_text(display_text)
             text_is_new = False
@@ -319,9 +324,19 @@ def zscroll():
             if last_hidden_was_wide:
                 # don't shift the text for one update
                 last_hidden_was_wide = False
+            elif next_hidden_is_wide:
+                next_hidden_is_wide = False
+                shift_text = shift_text[-1] + shift_text[0:-1]
             else:
-                last_hidden_was_wide = visual_len(shift_text[0]) == 2
-                shift_text = shift_text[1:] + shift_text[0]
+                if args.reverse:
+                    if visual_len(shift_text[-1]) == 2:
+                        # phase in in two steps
+                        next_hidden_is_wide = True
+                    else:
+                        shift_text = shift_text[-1] + shift_text[0:-1]
+                else:
+                    last_hidden_was_wide = visual_len(shift_text[0]) == 2
+                    shift_text = shift_text[1:] + shift_text[0]
         time.sleep(args.delay)
 
 
