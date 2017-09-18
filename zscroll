@@ -335,8 +335,13 @@ def print_text(text):
     last_text_len = text_len
 
 
-def zscroll():
-    """Update settings as needed and continuously prints scroll-text."""
+def zscroll(lines=0):
+    """Update settings as needed and continuously prints scroll-text.
+
+    :param lines: the number of lines to print (used for testing/debugging
+        purposes)
+    :type lines: int
+    """
     # don't modify global var when shifting; keep for comparison
     shift_text = scroll_text
     text_is_new = True
@@ -344,11 +349,18 @@ def zscroll():
     last_hidden_was_wide = False
     next_hidden_is_wide = True
     end_time = time() + args.timeout
+    num_lines = 0
     while True:
-        if args.timeout and time() > end_time:
+        if (args.timeout and time() > end_time) \
+           or (lines > 0 and num_lines == lines):
             break
-        if (len(args.match_command) >= 1 and match_update_args()) \
-           or (args.update_check and update_check()):
+        else:
+            num_lines += 1
+        if len(args.match_command) >= 1 and match_update_args():
+            text_is_new = True
+        # want to always check, especially if new match (because -u setting
+        # could have changed)
+        if args.update_check and update_check():
             text_is_new = True
         if text_is_new:
             shift_text = scroll_text
@@ -384,16 +396,22 @@ def zscroll():
         sleep(args.delay)
 
 
-def pre_parse_args():
+def pre_parse_argv(argv):
     """Ensure that argv can be properly parsed by argparse.
 
     This is a workaround for the fact that argparse treats everything that
     starts with a hyphen as an option even after options that take a fixed
     number of arguments (https://bugs.python.org/issue9334).
+
+    :param argv: the argument list as obtained from sys.argv
+    :type argv: list
+
+    :return: the pre-parsed argv list
+    :rtype: list
     """
-    for i in range(1, len(sys.argv)):
+    for i in range(1, len(argv)):
         # note: don't need to check for --opt= because these work correctly
-        if sys.argv[i] in {
+        if argv[i] in {
                 '-b',
                 '--before-text',
                 '-a',
@@ -404,32 +422,34 @@ def pre_parse_args():
                 '-M',
                 '--match-command'
         }:
-            sys.argv[i + 1] = ' ' + sys.argv[i + 1]
-        elif sys.argv[i] in {'-m', '--match-text'}:
-            sys.argv[i + 1] = ' ' + sys.argv[i + 1]
-            sys.argv[i + 2] = ' ' + sys.argv[i + 2]
+            argv[i + 1] = ' ' + argv[i + 1]
+        elif argv[i] in {'-m', '--match-text'}:
+            argv[i + 1] = ' ' + argv[i + 1]
+            argv[i + 2] = ' ' + argv[i + 2]
+    return argv
 
 
-def parse_args():
+def parse_argv(argv):
     """Parse command line arguments and update default values.
 
     Also remove leading spaces that wee added to arguments to prevent argparse
     from incorrectly parsing them.
+
+    :param argv: the argument list as obtained from sys.argv
+    :type argv: list
     """
     global initial_args, args, scroll_text
-    initial_args = parser.parse_args()
-    initial_args.before_text = initial_args.before_text.replace(' ', '', 1)
-    initial_args.aftery_text = initial_args.after_text.replace(' ', '', 1)
-    if initial_args.scroll_padding != ' - ':
-        initial_args.scroll_padding = initial_args.scroll_padding \
-                                                  .replace(' ', '', 1)
-    initial_args.match_text = [
-        [j.replace(' ', '', 1) for j in i] for i in initial_args.match_text
+    args = parser.parse_args(argv[1:])
+    args.before_text = args.before_text.replace(' ', '', 1)
+    args.after_text = args.after_text.replace(' ', '', 1)
+    if args.scroll_padding != ' - ':
+        args.scroll_padding = args.scroll_padding.replace(' ', '', 1)
+    args.match_text = [
+        [j.replace(' ', '', 1) for j in i] for i in args.match_text
     ]
-    initial_args.match_command = [
-        i.replace(' ', '', 1) for i in initial_args.match_command
-    ]
-    args = initial_args
+    args.match_command = [i.replace(' ', '', 1) for i in args.match_command]
+
+    initial_args = args
     # if -u was specified, this will be correctly updated later
     scroll_text = args.scroll_text
     # update defaults to those specified by the users
@@ -461,16 +481,16 @@ def validate_args(check_args):
 
 def main():
     """Scroll text, handling invalid opts and keyboard interrupts."""
-    pre_parse_args()
-    parse_args()
-    validate_args(initial_args)
+    argv = pre_parse_argv(sys.argv)
+    parse_argv(argv)
+    validate_args(args)
     for arg_string in args.match_text:
         arg_string = arg_string[1]
         match_args = parser.parse_args(split(arg_string))
         # -m and -M should never be altered
         # ignore them if the user tries to alter them even if they are wrong
-        match_args.match_command = initial_args.match_command
-        match_args.match_text = initial_args.match_text
+        match_args.match_command = args.match_command
+        match_args.match_text = args.match_text
         validate_args(match_args)
     try:
         zscroll()
