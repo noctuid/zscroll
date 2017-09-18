@@ -284,12 +284,13 @@ def match_update_args():
             search_text = shell_output(args.match_command[i])
         if search(args.match_text[i][0], search_text):
             match_args = parser.parse_args(split(args.match_text[i][1]))
-            if match_args.before_text != args.before_text \
-               or match_args.after_text != args.after_text \
-               or match_args.scroll_padding != args.scroll_padding \
-               or match_args.scroll_text != args.scroll_text:
-                text_was_updated = True
-            set_args(match_args)
+            text_was_updated = \
+                (match_args.before_text != args.before_text
+                 or match_args.after_text != args.after_text
+                 or match_args.scroll_padding != args.scroll_padding
+                 or match_args.scroll_text != args.scroll_text)
+    if match_args:
+        set_args(match_args)
     return text_was_updated
 
 

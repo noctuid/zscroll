@@ -1,7 +1,11 @@
 """Tests for zscroll."""
-import pytest
-from shlex import split
+import os
+import sys
 from imp import load_source
+from shlex import split
+
+import pytest
+
 z = load_source('zscroll', './zscroll')
 
 
@@ -30,12 +34,13 @@ def test_make_visual_len(string, new_length, new_string):
 
 @pytest.mark.parametrize('command,result', [
     ('echo test', 'test'),
+    ('false', ''),
 ])
 def test_shell_output(command, result):
     assert z.shell_output(command) == result
 
 
-@pytest.mark.parametrize('arg_list,result', [
+@pytest.mark.parametrize('arg_string,result', [
     # basic case with both fullwidth and halfwidth characters
     ('-l 8 -b "b: " -a " :a" -p "|" -d 0.0000001 "aaいuえoわし"',
      ['b: aaいuえo :a',
@@ -102,7 +107,7 @@ def test_shell_output(command, result):
       '-b:--aいuえ-a', ]),
     # test -m (and that change in -u will be immediately detected)
     ('-l 8 -b "b: " -a " :a" -p "|" -d 0.0000001 -M "echo text"' + \
-     ' -m "text" "-b > -a < -p \' | \' \'echo aaいuえoわし\'" "aaいuえoわし"',
+     ' -m "text" "-u t -b > -a < -p \' | \' \'echo aaいuえoわし\'" "failed"',
      ['>aaいuえo<',
       '>aいuえo <',
       '>いuえoわ<',
@@ -118,9 +123,9 @@ def test_shell_output(command, result):
       '> | aaいu<',
       '>| aaいu <', ]),
     # last -m should take precedence
-    ('-l 8 -b "b: " -a " :a" -p "|" -d 0.0000001 -M "echo text"' + \
-     ' -m "txt" "-b b -a a -p \' - \' \'echo abcdefghijk\'"' + \
-     ' -m "text" "-b > -a < -p \' | \' \'echo aaいuえoわし\'" "aaいuえoわし"',
+    ('-l 8 -b "b: " -a " :a" -p "|" -d 0.0000001 -M "echo txt"' + \
+     ' -m "txt" "-s no \'echo abcdefghijk\'" -M "echo text"' + \
+     ' -m "text" "-u t -b > -a < -p \' | \' \'echo aaいuえoわし\'" "failed"',
      ['>aaいuえo<',
       '>aいuえo <',
       '>いuえoわ<',
@@ -136,13 +141,37 @@ def test_shell_output(command, result):
       '> | aaいu<',
       '>| aaいu <', ]),
 ])
-def test_zscroll(arg_list, result, capfd):
+def test_zscroll(arg_string, result, capfd):
     # reload default settings
     z = load_source('zscroll', './zscroll')
-    argv = ['zscroll'] + split(arg_list)
+    argv = ['zscroll'] + split(arg_string)
     argv = z.pre_parse_argv(argv)
     z.parse_argv(argv)
     z.zscroll(14)
     out, err = capfd.readouterr()
     out = out.rstrip().split('\n')
     assert out == result
+
+
+@pytest.mark.parametrize('arg_string', [
+    # no scroll-text specified
+    ('-n true'),
+    # no -M specified with -m
+    ('-m match-text "-s no" scroll-text'),
+    # number of -M > 1 but does not match number of -m
+    ('-M command1 -m text1 \'-s f\' -M command2 -m text2 \'-s f\'' + \
+     ' -m text3 \'-s f\' scroll-text'),
+])
+def test_validate_args(arg_string):
+    # reload default settings
+    z = load_source('zscroll', './zscroll')
+    argv = ['zscroll'] + split(arg_string)
+    argv = z.pre_parse_argv(argv)
+    z.parse_argv(argv)
+    with pytest.raises(SystemExit):
+        # silence help text
+        old_stdout = sys.stdout
+        null = open(os.devnull, 'w')
+        sys.stdout = null
+        z.validate_args(z.args)
+        sys.stdout = old_stdout

@@ -1,4 +1,7 @@
 * Zscroll
+[[https://travis-ci.org/noctuid/zscroll][https://travis-ci.org/noctuid/zscroll.svg?branch=master]]
+[[https://codecov.io/github/noctuid/zscroll?branch=master][https://codecov.io/github/noctuid/zscroll/coverage.svg?branch=master]]
+
 The most common use cases are described in this README. For complete information on every flag, please see the man page (or the help text for basic information on every flag).
 
 ** Version 2.0 Breaking Changes
