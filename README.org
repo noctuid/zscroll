@@ -38,8 +38,9 @@ $ nix-env -i zscroll
 #+begin_src sh
 $ git clone https://github.com/noctuid/zscroll
 $ cd zscroll
-$ sudo python setup.py install
+$ sudo python3 setup.py install
 #+end_src
+This program will not work with Python 2. For this reason you **must** install with Python 3. This can be done in Ubuntu with `sudo python3 setup.py install` and may be the same for other distributions. If this does not work for you, please consult your distribution's documentation.
 
 ** Dynamically Updating Text
 Zscroll can now update its text by itself. This may be nice for panels that don't allow for the user to conditionally start new processes. It also simplifies the logic necessary to change settings for the scrolling text and gets rid of the need for an [[https://github.com/noctuid/dotfiles/blob/a251c682aa71e115ca83e75f938016e2f134ed47/aesthetics/.panel_scripts/panel#L39][ugly function]] to repeatedly kill and start the scroller.
