@@ -122,7 +122,9 @@ parser.add_argument(
     '--timeout',
     type=float,
     default=0,
-    help="Time to wait before exiting; 0 means don't exit (default: 0)"
+    help="""
+         time in seconds to wait before exiting; 0 means don't exit (default: 0)
+         """
 )
 
 # no args
@@ -148,6 +150,19 @@ parser.add_argument(
 )
 
 parser.add_argument(
+    '-U',
+    '--update-interval',
+    type=float,
+    default=0,
+    help="""
+         time in seconds to wait in between running update checking commands
+         (i.e. the command specified by the positional argument when
+         -u/--update-interval is specified and commands specified with
+         -M/--match-command)  (default: 0)
+         """
+)
+
+parser.add_argument(
     '-n',
     '--newline',
     type=str_to_bool,
@@ -162,6 +177,7 @@ initial_args = None
 args = None
 scroll_text = None
 last_text_len = None
+last_update_check_time = None
 
 
 def visual_len(text):
@@ -336,6 +352,26 @@ def print_text(text):
     last_text_len = text_len
 
 
+def maybe_update_text_and_settings():
+    """Update the scroll-text and/or settings if necessary.
+
+    :return: whether the text and/or settings were updated
+    :rtype: bool
+    """
+    global last_update_check_time
+    updated = False
+    if not args.update_interval or last_update_check_time is None \
+       or last_update_check_time + args.update_interval < time():
+        if len(args.match_command) >= 1 and match_update_args():
+            updated = True
+        # want to always check, especially if new match (because -u setting
+        # could have changed)
+        if args.update_check and update_check():
+            updated = True
+        last_update_check_time = time()
+    return updated
+
+
 def zscroll(lines=0):
     """Update settings as needed and continuously prints scroll-text.
 
@@ -345,7 +381,7 @@ def zscroll(lines=0):
     """
     # don't modify global var when shifting; keep for comparison
     shift_text = scroll_text
-    text_is_new = True
+    should_restart_printing = True
     needs_scrolling = False
     last_hidden_was_wide = False
     next_hidden_is_wide = True
@@ -357,13 +393,9 @@ def zscroll(lines=0):
             break
         else:
             num_lines += 1
-        if len(args.match_command) >= 1 and match_update_args():
-            text_is_new = True
-        # want to always check, especially if new match (because -u setting
-        # could have changed)
-        if args.update_check and update_check():
-            text_is_new = True
-        if text_is_new:
+        if maybe_update_text_and_settings():
+            should_restart_printing = True
+        if should_restart_printing:
             shift_text = scroll_text
             last_hidden_was_wide = False
             next_hidden_is_wide = False
@@ -374,9 +406,9 @@ def zscroll(lines=0):
             shift_text, needs_scrolling,
             (last_hidden_was_wide or next_hidden_is_wide)
         )
-        if args.scroll and needs_scrolling or text_is_new:
+        if args.scroll and needs_scrolling or should_restart_printing:
             print_text(display_text)
-            text_is_new = False
+            should_restart_printing = False
         if args.scroll and needs_scrolling:
             if last_hidden_was_wide:
                 # don't shift the text for one update
