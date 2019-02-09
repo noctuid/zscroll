@@ -1,6 +1,7 @@
 * Zscroll
 [[https://travis-ci.org/noctuid/zscroll][https://travis-ci.org/noctuid/zscroll.svg?branch=master]]
 [[https://codecov.io/github/noctuid/zscroll?branch=master][https://codecov.io/github/noctuid/zscroll/coverage.svg?branch=master]]
+[[https://github.com/ambv/black][https://img.shields.io/badge/code%20style-black-000000.svg]]
 
 The most common use cases are described in this README. For complete information on every flag, please see the man page (or the help text for basic information on every flag).
 
@@ -100,3 +101,8 @@ I was using benghaem's scroller for a while. I didn't like that the arguments we
 Zscroll supports the features I liked from each. It has a speed option, adds an option for right padding text, will work on text as an argument or piped into it, handles fullwidth characters intelligently, and has other advanced features.
 
 I called this zscroll because it's the last scroller I'll use... but more importantly because I couldn't think of another name.
+
+** Contributing
+Zscroll is using [[https://black.readthedocs.io/en/stable/][black]] for formatting, [[http://flake8.pycqa.org/en/latest/][flake8]] and [[https://www.pylint.org/][pylint]] for linting, and [[https://docs.pytest.org/en/latest/][pytest for testing]]. If want to make a PR, please write tests for any added or fixed functionality and make sure that the code is formatted with black and passes flake8 checks.
+
+To automatically format with black when commiting and abort the commit if there are any flake8 errors, you can install [[https://pre-commit.com/][pre-commit]] and run =pre-commit install= once after cloning.

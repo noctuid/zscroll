@@ -36,7 +36,7 @@ parser.add_argument(
     help="""
          text to scroll; will print in place if not longer than -l scroll
          length; can be read from stdin, e.g. echo text | zscroll
-         """
+         """,
 )
 
 parser.add_argument(
@@ -44,7 +44,7 @@ parser.add_argument(
     '--length',
     type=int,
     default=40,
-    help="length of scrolling text excluding padding (default: 40)"
+    help="length of scrolling text excluding padding (default: 40)",
 )
 
 parser.add_argument(
@@ -52,7 +52,7 @@ parser.add_argument(
     '--reverse',
     type=str_to_bool,
     default=False,
-    help="whether to scroll the text from left to right (default: false)"
+    help="whether to scroll the text from left to right (default: false)",
 )
 
 parser.add_argument(
@@ -62,7 +62,7 @@ parser.add_argument(
     help="""
          stationary padding text to display to the left of the scroll-text
          (default: "")
-         """
+         """,
 )
 
 parser.add_argument(
@@ -72,7 +72,7 @@ parser.add_argument(
     help="""
          stationary padding text to display to the right of the scroll-text
          (default: "")
-         """
+         """,
 )
 
 parser.add_argument(
@@ -82,7 +82,7 @@ parser.add_argument(
     help="""
          padding text to display between the start and end of the scroll-text
          only when it is scrolling (default: " - ")
-         """
+         """,
 )
 
 parser.add_argument(
@@ -93,7 +93,7 @@ parser.add_argument(
     help="""
          delay (in seconds) for scrolling update; lower this for faster
          scrolling (default: 0.4)
-         """
+         """,
 )
 
 parser.add_argument(
@@ -106,7 +106,7 @@ parser.add_argument(
          takes 2 arguments: the regexp to search for in match-command output to
          determine whether to change settings and the new settings themselves;
          see the man page for more info (default: none)
-         """
+         """,
 )
 
 parser.add_argument(
@@ -114,7 +114,7 @@ parser.add_argument(
     '--match-command',
     action='append',
     default=[],
-    help="command(s) to search output of (default: none)"
+    help="command(s) to search output of (default: none)",
 )
 
 parser.add_argument(
@@ -123,8 +123,9 @@ parser.add_argument(
     type=float,
     default=0,
     help="""
-         time in seconds to wait before exiting; 0 means don't exit (default: 0)
-         """
+         time in seconds to wait before exiting; 0 means don't exit (default:
+         0)
+         """,
 )
 
 # no args
@@ -133,7 +134,7 @@ parser.add_argument(
     '--scroll',
     type=str_to_bool,
     default=True,
-    help="whether to scroll; meant to be used with -m (default: true)"
+    help="whether to scroll; meant to be used with -m (default: true)",
 )
 
 parser.add_argument(
@@ -146,7 +147,7 @@ parser.add_argument(
          checked to determine if the scroll-text should be updated; when the
          output changes, the scroll-text is updated to the new output (default:
          false)
-         """
+         """,
 )
 
 parser.add_argument(
@@ -159,7 +160,7 @@ parser.add_argument(
          (i.e. the command specified by the positional argument when
          -u/--update-interval is specified and commands specified with
          -M/--match-command)  (default: 0)
-         """
+         """,
 )
 
 parser.add_argument(
@@ -170,7 +171,7 @@ parser.add_argument(
     help="""
          print a newline after each update; printing a newline may be
          necessary for panels (default: true)
-         """
+         """,
 )
 
 initial_args = None
@@ -252,8 +253,9 @@ def shell_output(command):
     :rtype: str
     """
     try:
-        return check_output(split(command)) \
-            .decode(encoding='UTF-8').rstrip('\n')
+        return (
+            check_output(split(command)).decode(encoding='UTF-8').rstrip('\n')
+        )
     except CalledProcessError:
         return ''
 
@@ -300,11 +302,12 @@ def match_update_args():
             search_text = shell_output(args.match_command[i])
         if search(args.match_text[i][0], search_text):
             match_args = parser.parse_args(split(args.match_text[i][1]))
-            text_was_updated = \
-                (match_args.before_text != args.before_text
-                 or match_args.after_text != args.after_text
-                 or match_args.scroll_padding != args.scroll_padding
-                 or match_args.scroll_text != args.scroll_text)
+            text_was_updated = (
+                match_args.before_text != args.before_text
+                or match_args.after_text != args.after_text
+                or match_args.scroll_padding != args.scroll_padding
+                or match_args.scroll_text != args.scroll_text
+            )
     if match_args:
         set_args(match_args)
     return text_was_updated
@@ -360,8 +363,11 @@ def maybe_update_text_and_settings():
     """
     global last_update_check_time
     updated = False
-    if not args.update_interval or last_update_check_time is None \
-       or last_update_check_time + args.update_interval < time():
+    if (
+        not args.update_interval
+        or last_update_check_time is None
+        or last_update_check_time + args.update_interval < time()
+    ):
         if len(args.match_command) >= 1 and match_update_args():
             updated = True
         # want to always check, especially if new match (because -u setting
@@ -388,8 +394,9 @@ def zscroll(lines=0):
     end_time = time() + args.timeout
     num_lines = 0
     while True:
-        if (args.timeout and time() > end_time) \
-           or (lines > 0 and num_lines == lines):
+        if (args.timeout and time() > end_time) or (
+            lines > 0 and num_lines == lines
+        ):
             break
         else:
             num_lines += 1
@@ -403,8 +410,9 @@ def zscroll(lines=0):
             if needs_scrolling:
                 shift_text += args.scroll_padding
         display_text = build_display_text(
-            shift_text, needs_scrolling,
-            (last_hidden_was_wide or next_hidden_is_wide)
+            shift_text,
+            needs_scrolling,
+            (last_hidden_was_wide or next_hidden_is_wide),
         )
         if args.scroll and needs_scrolling or should_restart_printing:
             print_text(display_text)
@@ -445,15 +453,15 @@ def pre_parse_argv(argv):
     for i in range(1, len(argv)):
         # note: don't need to check for --opt= because these work correctly
         if argv[i] in {
-                '-b',
-                '--before-text',
-                '-a',
-                '--after-text',
-                '-p',
-                '--scroll-padding',
-                # unlikely to be an issue
-                '-M',
-                '--match-command'
+            '-b',
+            '--before-text',
+            '-a',
+            '--after-text',
+            '-p',
+            '--scroll-padding',
+            # unlikely to be an issue
+            '-M',
+            '--match-command',
         }:
             argv[i + 1] = ' ' + argv[i + 1]
         elif argv[i] in {'-m', '--match-text'}:
@@ -503,12 +511,13 @@ def validate_args(check_args):
     if len(check_args.match_text) > 0 and len(check_args.match_command) == 0:
         parser.print_help()
         sys.exit("At least one -M is necessary for -m.")
-    if len(check_args.match_command) > 1 and \
-            len(check_args.match_command) != len(check_args.match_text):
+    if len(check_args.match_command) > 1 and len(
+        check_args.match_command
+    ) != len(check_args.match_text):
         parser.print_help()
         sys.exit(
-            "If there is more than one '-M', the number must match the" +
-            " number of '-m's."
+            "If there is more than one '-M', the number must match the"
+            + " number of '-m's."
         )
 
 
