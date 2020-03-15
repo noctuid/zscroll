@@ -48,16 +48,25 @@ Zscroll can now update its text by itself. This may be nice for panels that don'
 
 A simple use case is where one might want to display the current window's title. This can be done with the ~-u~ option, which will run zscroll's positional argument as a shell command to check for changes:
 #+begin_src sh
-$ zscroll -b "| " -a " |" -u true "xtitle"
+zscroll -b "| " -a " |" -u true "xtitle"
 #+end_src
 
 Zscroll even supports more complex updates by searching for a regular expression in the output of a command to determine whether certain settings should be changed. As an example, this can be useful for displaying a pause icon and prevent scrolling when the current song is paused. The following command will take these actions when "paused" is found in the output of the shell command ~mpc status~:
 #+begin_src sh
-$ zscroll -u t -b "♪ x" -d 0.3 -M "mpc status" -m "playing" \
-		"-b ' '" -m "paused" "-b ' ' -s 0" "mpc current"
+zscroll --before-text "♪ x" --delay 0.3 \
+		--match-command "mpc status" \
+		--match-text "playing" "--before-text ' '" \
+		--match-text "paused" "--before-text ' ' --scroll 0" \
+		--update-check true "mpc current"
+# or shortopts
+zscroll -b "♪ x" -d 0.3 \
+		-M "mpc status" \
+		-m "playing" "-b ' '" \
+		-m "paused" "-b ' ' -s 0" \
+		-u t "mpc current"
 #+end_src
 
-New options (and possibly new scroll-text) should be specified as the second argument to every =-m=. Options not specified with an =-m= will default to the user-specified values outside of the =-m= (or the base defaults). Any option can be altered when a ~-m~ search term is found (except for =-m= and =-M=, which will be ignored). Note that when multiple ~-m~ options happen to be matched, it is the last one that will take effect. 
+New options (and possibly new scroll-text) should be specified as the second argument to every =-m=. Options not specified with an =-m= will default to the user-specified values outside of the =-m= (or the base defaults). Any option can be altered when a ~-m~ search term is found (except for =-m= and =-M=, which will be ignored). Note that when multiple ~-m~ options happen to be matched, it is the last one that will take effect.
 
 See the man page for more information.
 
@@ -83,8 +92,11 @@ In the script:
 #+begin_src shell
 #!/usr/bin/env bash
 
-zscroll -u true -b "♪ x" -d 0.3 -M "mpc status" -m "playing" \
-		"-b ' '" -m "paused" "-b ' ' -s false" "mpc current" &
+zscroll --before-text "♪ x" --delay 0.3 \
+		--match-command "mpc status" \
+		--match-text "playing" "--before-text ' '" \
+		--match-text "paused" "--before-text ' ' --scroll 0" \
+		--update-check true "mpc current" &
 
 wait
 #+end_src
@@ -105,4 +117,4 @@ I called this zscroll because it's the last scroller I'll use... but more import
 ** Contributing
 Zscroll is using [[https://black.readthedocs.io/en/stable/][black]] for formatting, [[http://flake8.pycqa.org/en/latest/][flake8]] and [[https://www.pylint.org/][pylint]] for linting, and [[https://docs.pytest.org/en/latest/][pytest for testing]]. If want to make a PR, please write tests for any added or fixed functionality and make sure that the code is formatted with black and passes flake8 checks.
 
-To automatically format with black when commiting and abort the commit if there are any flake8 errors, you can install [[https://pre-commit.com/][pre-commit]] and run =pre-commit install= once after cloning.
+To automatically format with black when commiting and abort the commit if there are any flake8 errors, you can install [[https://pre-commit.com/][pre-commit]] and run =pre-commit install= once in the repository root after cloning.
