@@ -37,7 +37,7 @@ def test_make_visual_len(string, new_length, new_string):
     ('false', ''),
 ])
 def test_shell_output(command, result):
-    assert z.shell_output(command) == result
+    assert z.shell_output(command, False) == result
 
 
 @pytest.mark.parametrize('arg_string,result', [
