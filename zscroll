@@ -164,30 +164,17 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    '-i',
-    '--insecure-match',
+    '-e',
+    '--eval-in-shell',
     type=str_to_bool,
     default=False,
     help="""
-         executes the commands in -M/--match-command and -m/--match-text in shell
-         which allows them to use environment variables (like $PWD)
-         or execute other scripts (e.g. "$(/path/to/script)");
-         note that this could lead to unwanted command injection,
-         so only use it when it's really necessary (default: false)
-         """
-)
-
-parser.add_argument(
-    '-I',
-    '--insecure-command',
-    type=str_to_bool,
-    default=False,
-    help="""
-         executes the positional argument in shell (-u/--update-check must be true too)
-         which allows it to use environment variables (like $PWD)
-         or execute other scripts (e.g. "$(/path/to/script)");
-         note that this could lead to unwanted command injection,
-         so only use it when it's really necessary (default: false)
+         executes -M/--match-command, -m/--match-text and the positional argument 
+         in shell (-u/--update-check must be true too) which allows the use of
+         environment variables (like $PWD) in it or execute other scripts
+         along with other commands (e.g. 'echo $(/path/to/script)'); 
+         watch out to quote the commands right to prevent unwanted command injection
+         (default: false)
          """
 )
 
@@ -295,7 +282,7 @@ def update_check():
     :rtype: bool
     """
     global scroll_text
-    compare_text = shell_output(args.scroll_text, args.insecure_command)
+    compare_text = shell_output(args.scroll_text, args.eval_in_shell)
     if scroll_text != compare_text:
         scroll_text = compare_text
         return True
@@ -323,11 +310,11 @@ def match_update_args():
     :rtype: bool
     """
     match_args = None
-    search_text = shell_output(args.match_command[0], args.insecure_match)
+    search_text = shell_output(args.match_command[0], args.eval_in_shell)
     text_was_updated = False
     for i in range(len(args.match_text)):
         if len(args.match_command) > 1 and i > 0:
-            search_text = shell_output(args.match_command[i], args.insecure_match)
+            search_text = shell_output(args.match_command[i], args.eval_in_shell)
         if search(args.match_text[i][0], search_text):
             match_args = parser.parse_args(split(args.match_text[i][1]))
             text_was_updated = (

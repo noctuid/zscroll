@@ -47,11 +47,8 @@ Specify that the positional argument refers to a command that should be run to o
 \fB-U TIME\fR, \fB --update-interval=TIME\fR
 Specify the time in seconds to wait in between running update checking commands. This applies to the positional argument when -u/--update-check is specified and to commands specified with -M/--match-command. This may be useful if the scrolling text only needs to be updated infrequently or if continuously running the update checking command(s) is resource intensive. (default: 0)
 .TP
-\fB-i BOOL\fR, \fB --insecure-match=BOOL\fR
-Executes the commands in -M/--match-command and -m/--match-text in shell which allows them to use environment variables (like $PWD) or execute other scripts (e.g. "$(/path/to/script)"). Note that this could lead to unwanted command injection, so only use it when it's really necessary (default: false)
-.TP
-\fB-I BOOL\fR, \fB --insecure-command=BOOL\fR
-Executes the positional argument in shell (-u/--update-check must be true too) which allows it to use environment variables (like $PWD) or execute other scripts (e.g. "$(/path/to/script)"). Note that this could lead to unwanted command injection, so only use it when it's really necessary (default: false)
+\fB-e BOOL\fR, \fB --eval-in-shell=BOOL\fR
+Executes -M/--match-command, -m/--match-text and the positional argument in shell (-u/--update-check must be true too) which allows the use of environment variables (like $PWD) in it or execute other scripts along with other commands (e.g. 'echo $(/path/to/script)'). Watch out to quote the commands right to prevent unwanted command injection. See https://docs.python.org/3/library/subprocess.html#security-considerations for further shell security related information. (default: false)
 .TP
 \fB-n BOOL\fR, \fB --newline=BOOL\fR
 Add a newline after every update/step (may be necessary for use with panels). Takes no argument. (default: true)
@@ -72,6 +69,10 @@ $ zscroll -n false -u true -b "playing: " "mpc current"
 You can also pipe into zscroll:
 .br
 $ xtitle | zscroll -l 60
+
+Full shell instructions can be passed too:
+.br
+$ zscroll -u true -e true 'echo Unix Time: $(date +%s)'
 
 An example that will stop scrolling the song when it is paused and change the before padding text depending on the state of the song:
 .br

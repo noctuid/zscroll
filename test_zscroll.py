@@ -40,6 +40,14 @@ def test_shell_output(command, result):
     assert z.shell_output(command, False) == result
 
 
+@pytest.mark.parametrize('command,result', [
+    ('echo $(echo test)', 'test'),
+    ('false', '')
+])
+def test_eval_shell_output(command, result):
+    assert z.shell_output(command, True) == result
+
+
 @pytest.mark.parametrize('arg_string,result', [
     # basic case with both fullwidth and halfwidth characters
     ('-l 8 -b "b: " -a " :a" -p "|" -d 0.0000001 "aaいuえoわし"',
