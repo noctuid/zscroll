@@ -1,5 +1,6 @@
 [tool.black]
-line-length = 79
+# this is the default
+line-length = 100
 skip-string-normalization = true
 include = '\.pyi?$'
 exclude = '''
@@ -16,3 +17,45 @@ exclude = '''
   | dist
 )/
 '''
+
+[tool.isort]
+# black compatible settings
+# https://github.com/timothycrosley/isort/issues/694
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+line_length = 100
+
+[tool.pydocstyle]
+match = "(.*\\.py|zscroll)"
+
+[tool.poetry]
+name = "zscroll"
+version = "1.0.0"
+description = "A text scroller for panels or terminals"
+authors = ["Fox Kiester <noct@posteo.net>"]
+license = "GPL3"
+
+[tool.poetry.dependencies]
+python = ">=3.6.2,<4.0"
+pytest-cov = "^2.12.1"
+codecov = "^2.1.12"
+
+[tool.poetry.dev-dependencies]
+pytest = "^6.2.4"
+black = "^21.7b0"
+pytest-cov = "^2.12.1"
+codecov = "^2.1.12"
+flake8 = "^3.9.2"
+pylint = "^2.9.6"
+mypy = "^0.910"
+isort = "^5.9.3"
+pydocstyle = "^6.1.1"
+pycodestyle = "^2.7.0"
+pyflakes = "^2.3.1"
+mccabe = "^0.6.1"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

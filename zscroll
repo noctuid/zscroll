@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""A text scroller for panels or terminals"""
+"""A text scroller for panels or terminals."""
 import argparse
 import sys
 from distutils.util import strtobool
@@ -169,13 +169,13 @@ parser.add_argument(
     type=str_to_bool,
     default=False,
     help="""
-         executes -M/--match-command and the positional argument 
+         executes -M/--match-command and the positional argument
          in shell (-u/--update-check must be true too) which allows the use of
          environment variables (like $PWD) in it or execute other scripts
-         along with other commands (e.g. 'echo $(/path/to/script)'); 
+         along with other commands (e.g. 'echo $(/path/to/script)');
          watch out to quote the commands right to prevent unwanted command injection
          (default: false)
-         """
+         """,
 )
 
 parser.add_argument(
@@ -211,7 +211,7 @@ def visual_len(text):
     visual_length = 0
     for char in text:
         width = east_asian_width(char)
-        if width == 'W' or width == 'F':
+        if width in ('W', 'F'):
             visual_length += 2
         else:
             visual_length += 1
@@ -238,7 +238,7 @@ def make_visual_len(desired_visual_length, text):
     for char in text:
         if visual_length < desired_visual_length:
             width = east_asian_width(char)
-            if width == 'W' or width == 'F':
+            if width in ('W', 'F'):
                 visual_length += 2
             else:
                 visual_length += 1
@@ -253,7 +253,7 @@ def make_visual_len(desired_visual_length, text):
     return altered_text
 
 
-def shell_output(command, shell):
+def shell_output(command, shell=False):
     """Get the output of a shell command as a string.
 
     If the command fails, return "".  This is useful in certain cases where a
@@ -269,7 +269,9 @@ def shell_output(command, shell):
     """
     try:
         return (
-            check_output(command if shell else split(command), shell=shell).decode(encoding='UTF-8').rstrip('\n')
+            check_output(command if shell else split(command), shell=shell)
+            .decode(encoding='UTF-8')
+            .rstrip('\n')
         )
     except CalledProcessError:
         return ''
@@ -286,8 +288,7 @@ def update_check():
     if scroll_text != compare_text:
         scroll_text = compare_text
         return True
-    else:
-        return False
+    return False
 
 
 def set_args(new_args):
@@ -312,11 +313,11 @@ def match_update_args():
     match_args = None
     search_text = shell_output(args.match_command[0], args.eval_in_shell)
     text_was_updated = False
-    for i in range(len(args.match_text)):
+    for i, match_text in enumerate(args.match_text):
         if len(args.match_command) > 1 and i > 0:
             search_text = shell_output(args.match_command[i], args.eval_in_shell)
-        if search(args.match_text[i][0], search_text):
-            match_args = parser.parse_args(split(args.match_text[i][1]))
+        if search(match_text[0], search_text):
+            match_args = parser.parse_args(split(match_text[1]))
             text_was_updated = (
                 match_args.before_text != args.before_text
                 or match_args.after_text != args.after_text
@@ -409,12 +410,9 @@ def zscroll(lines=0):
     end_time = time() + args.timeout
     num_lines = 0
     while True:
-        if (args.timeout and time() > end_time) or (
-            lines > 0 and num_lines == lines
-        ):
+        if (args.timeout and time() > end_time) or (lines > 0 and num_lines == lines):
             break
-        else:
-            num_lines += 1
+        num_lines += 1
         if maybe_update_text_and_settings():
             should_restart_printing = True
         if should_restart_printing:
@@ -500,9 +498,7 @@ def parse_argv(argv):
     args.after_text = args.after_text.replace(' ', '', 1)
     if args.scroll_padding != ' - ':
         args.scroll_padding = args.scroll_padding.replace(' ', '', 1)
-    args.match_text = [
-        [j.replace(' ', '', 1) for j in i] for i in args.match_text
-    ]
+    args.match_text = [[j.replace(' ', '', 1) for j in i] for i in args.match_text]
     args.match_command = [i.replace(' ', '', 1) for i in args.match_command]
 
     initial_args = args
@@ -526,14 +522,11 @@ def validate_args(check_args):
     if len(check_args.match_text) > 0 and len(check_args.match_command) == 0:
         parser.print_help()
         sys.exit("At least one -M is necessary for -m.")
-    if len(check_args.match_command) > 1 and len(
-        check_args.match_command
-    ) != len(check_args.match_text):
+    if len(check_args.match_command) > 1 and len(check_args.match_command) != len(
+        check_args.match_text
+    ):
         parser.print_help()
-        sys.exit(
-            "If there is more than one '-M', the number must match the"
-            + " number of '-m's."
-        )
+        sys.exit("If there is more than one '-M', the number must match the" + " number of '-m's.")
 
 
 def main():

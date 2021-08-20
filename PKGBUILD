@@ -1,4 +1,4 @@
-# Maintainer: Fox Kiester <noct[at]openmailbox[dot]org>
+# Maintainer: Fox Kiester <noct[at]posteo[dot]net>
 _pkgname=zscroll
 pkgname=zscroll-git
 pkgver=

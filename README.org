@@ -1,5 +1,5 @@
 * Zscroll
-[[https://travis-ci.org/noctuid/zscroll][https://travis-ci.org/noctuid/zscroll.svg?branch=master]]
+[[https://github.com/noctuid/zscroll/actions/workflows/test.yml][https://github.com/noctuid/zscroll/actions/workflows/test.yml/badge.svg]]
 [[https://codecov.io/github/noctuid/zscroll?branch=master][https://codecov.io/github/noctuid/zscroll/coverage.svg?branch=master]]
 [[https://github.com/ambv/black][https://img.shields.io/badge/code%20style-black-000000.svg]]
 
@@ -117,6 +117,8 @@ Zscroll supports the features I liked from each. It has a speed option, adds an 
 I called this zscroll because it's the last scroller I'll use... but more importantly because I couldn't think of another name.
 
 ** Contributing
-Zscroll is using [[https://black.readthedocs.io/en/stable/][black]] for formatting, [[http://flake8.pycqa.org/en/latest/][flake8]] and [[https://www.pylint.org/][pylint]] for linting, and [[https://docs.pytest.org/en/latest/][pytest for testing]]. If want to make a PR, please write tests for any added or fixed functionality and make sure that the code is formatted with black and passes flake8 checks.
+Zscroll is using [[https://black.readthedocs.io/en/stable/][black]] and [[https://pycqa.github.io/isort/][isort]] for automatic formatting and import sorting. [[http://flake8.pycqa.org/en/latest/][flake8]] and [[https://www.pylint.org/][pylint]], and [[http://www.pydocstyle.org/en/stable/][pydocstyle]] are used for linting. [[https://docs.pytest.org/en/latest/][pytest]] is used for testing.
 
-To automatically format with black when commiting and abort the commit if there are any flake8 errors, you can install [[https://pre-commit.com/][pre-commit]] and run =pre-commit install= once in the repository root after cloning.
+Development dependencies can be installed with ~make deps~ or ~poetry installed~ ([[https://python-poetry.org/][poetry]] must be installed first). If you want to make a PR, please write tests for any added or fixed functionality and make sure that the code passes ~make lint~ and ~make test~.
+
+To automatically format with black when committing and abort the commit if there are any flake8 errors, you can install [[https://pre-commit.com/][pre-commit]] and run =pre-commit install= once in the repository root after cloning.
