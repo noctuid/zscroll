@@ -9,7 +9,8 @@ setup(
     author='Fox Kiester',
     author_email='noct[at]posteo[dot]net',
     url='https://github.com/noctuid/zscroll',
-    license='GPL3',
+    license='GNU General Public License v3 (GPLv3)',
+    keywords=["bar", "panel", "text", "scroll", "scroller"],
     # to the bin
     scripts=['zscroll'],
     data_files=[

@@ -32,15 +32,27 @@ match = "(.*\\.py|zscroll)"
 
 [tool.poetry]
 name = "zscroll"
-version = "1.0.0"
+version = "2.0.0"
 description = "A text scroller for panels or terminals"
 authors = ["Fox Kiester <noct@posteo.net>"]
-license = "GPL3"
+license = "GPL-3.0-only"
+readme = "README.org"
+repository = "https://github.com/noctuid/zscroll"
+keywords = ["bar", "panel", "text", "scroll", "scroller"]
+
+packages = [
+    { include = "zscroll" },
+]
+
+# no way to specify data_files
+# https://github.com/python-poetry/poetry/issues/890
+
+# doesn't work
+# [tool.poetry.scripts]
+# zscroll = "zscroll:main"
 
 [tool.poetry.dependencies]
 python = ">=3.6.2,<4.0"
-pytest-cov = "^2.12.1"
-codecov = "^2.1.12"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.4"
