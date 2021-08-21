@@ -1,0 +1,21 @@
+* 2.0.0
+** Breaking Changes
+- Long options are now hyphenated (e.g. =--update-check=)
+- All boolean options take an argument (e.g. =--scroll false=)
+- Newlines will be used by default (=--newline= defaults to true) as zscroll's primary use case is for panels, and this behavior is necessary for scrolling to work with polybar and lemonbar.
+- =-m= / =-M= syntax has changed to eliminate the previous complicated rules
+- The =-f= and =-c= flags have been removed. I don't see them as having a legitimate use case (the default behavior for handling fullwidth characters is much saner), but if anyone would like them back, feel free to make an issue. =-c= would count fullwidth characters as length 1, causing the scrolling text length to change. =-f= would convert all letters to fullwidth if any fullwidth letters were found.
+
+** New Functionality
+- Add =-t= / =--timeout= to exit after some timeout
+- Add =-r= / =--reverse= to reverse scroll direction
+- Add =-U= / =--update-interval= to specify time to wait before running update checking commands
+- Add =-e= / =--eval-in-shell= to evaluate commands in a shell (to allow things like subshells, piping, etc.)
+
+** Bug Fixes
+- Fix =-p= / =--scroll-padding= (see #4)
+- Don't exit if a shell command fails (e.g. mpd has not yet started but will later)
+
+** Miscellaneous
+- Add tests and CI
+- Change license to GPL3

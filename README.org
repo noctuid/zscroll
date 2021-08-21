@@ -10,7 +10,7 @@ The most common use cases are described in this README. For complete information
 - All boolean options take an argument (e.g. =--scroll false=)
 - Newlines will be used by default (=--newline= defaults to true) as zscroll's primary use case is for panels, and this behavior is necessary for scrolling to work with polybar and lemonbar.
 - =-m= / =-M= syntax has changed to eliminate the previous complicated rules
-- The =-f= and =-c= flags have been removed. I don't see them as having a legitimate use case (the default behavior for handling fullwidth characters is much saner), but if anyone would like them back, feel free to make an issue.
+- The =-f= and =-c= flags have been removed. I don't see them as having a legitimate use case (the default behavior for handling fullwidth characters is much saner), but if anyone would like them back, feel free to make an issue. =-c= would count fullwidth characters as length 1, causing the scrolling text length to change. =-f= would convert all letters to fullwidth if any fullwidth letters were found.
 
 ** Simple Example
 Scroll the currently playing mpd song:

@@ -169,12 +169,11 @@ parser.add_argument(
     type=str_to_bool,
     default=False,
     help="""
-         executes -M/--match-command and the positional argument
-         in shell (-u/--update-check must be true too) which allows the use of
-         environment variables (like $PWD) in it or execute other scripts
-         along with other commands (e.g. 'echo $(/path/to/script)');
-         watch out to quote the commands right to prevent unwanted command injection
-         (default: false)
+         executes -M/--match-command and the positional argument in the shell
+         (-u/--update-check must be true too) which allows the use of
+         environment variables (e.g. "$PWD"), subshells (e.g. 'echo
+         "$(/path/to/script)"'), piping, etc.; watch out to quote the commands
+         right to prevent unwanted command injection (default: false)
          """,
 )
 
