@@ -64,6 +64,6 @@ test:
 test-cov:
 	poetry run pytest -s -vv --cov=zscroll
 
-.PHONY: depends
+.PHONY: deps
 deps:
 	poetry install
