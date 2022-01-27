@@ -2,7 +2,6 @@
 """A text scroller for panels or terminals."""
 import argparse
 import sys
-from distutils.util import strtobool
 from re import search
 from shlex import split
 from subprocess import CalledProcessError, check_output
@@ -11,7 +10,7 @@ from unicodedata import east_asian_width
 
 
 def str_to_bool(string):
-    """Convert a string to a boolean.
+    """Convert a string (e.g. "true", "false", "yes", "no") to a boolean.
 
     :param string: the string to convert
     :type string: str
@@ -21,7 +20,7 @@ def str_to_bool(string):
     :return: the boolean interpretation of the string
     :rtype: bool
     """
-    return bool(strtobool(string.lower()))
+    return string.lower() in ["true", "t", "yes", "y", "1"]
 
 
 # pylint: disable-msg=C0103
