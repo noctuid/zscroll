@@ -32,7 +32,7 @@ match = "(.*\\.py|zscroll)"
 
 [tool.poetry]
 name = "zscroll"
-version = "2.0.0"
+version = "2.0.1"
 description = "A text scroller for panels or terminals"
 authors = ["Fox Kiester <noct@posteo.net>"]
 license = "GPL-3.0-only"

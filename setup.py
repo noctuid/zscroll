@@ -4,7 +4,7 @@ from distutils.core import setup
 
 setup(
     name='zscroll',
-    version='2.0.0',
+    version='2.0.1',
     description='A text scroller for use with panels',
     author='Fox Kiester',
     author_email='noct[at]posteo[dot]net',
