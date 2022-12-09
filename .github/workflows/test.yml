@@ -6,11 +6,14 @@ on:
       - 'zscroll'
       - '**.py'
       - '**test.yml'
+      - 'poetry.lock'
   push:
     paths:
       - 'zscroll'
       - '**.py'
       - '**test.yml'
+      - 'poetry.lock'
+
 
 jobs:
   test:
