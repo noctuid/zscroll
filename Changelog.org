@@ -1,3 +1,15 @@
+* 3.0.0
+- Rewrite to use typer instead of argparse (user-facing benefit is slightly nicer help text and shell completions)
+
+** Breaking Changes
+- New minimum Python 3.7 requirement
+- The =--length= option now applies to all text (including before, after, and padding text).  The "visual" length of the printed text is now correctly fixed and will not change even if the padding changes.  While this is a breaking change in behavior, old zscroll commands will still function.  However, some users may wish to increase the =--length= they are using.
+- Which options can be changed with =--match-text= are now limited and explicitly specified in the documentation.  Some options would not make sense to set locally or would require special handling.  For example, =-n= is normally set depending on where zscroll is running (terminal or specific panel), and I cannot think of a case where it would make sense to dynamically change this behavior.
+
+** New Functionality
+- =-m ".*" <options>= will just check command success instead of search for text
+- Add =-C / =--shift-count= to shift the text a certain number of times before exiting (partially addresses #21)
+
 * 2.0.1
 ** Bug Fixes
 - Remove dependency on deprecated distutils

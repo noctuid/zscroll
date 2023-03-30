@@ -1,0 +1,10 @@
+# nix-style newlines with a newline ending every file
+[*]
+end_of_line = lf
+insert_final_newline = true
+
+[**.py]
+max_line_length = 100
+
+[**.toml]
+indent_size = 4

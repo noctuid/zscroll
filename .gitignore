@@ -1,6 +1,8 @@
-__pycache__
 .coverage
-.pytest_cache
+.lsp
 .mypy_cache
+.pytest_cache
+.ruff_cache
 *.pyc
+__pycache__
 dist

@@ -33,7 +33,7 @@ Specify padding text that will be displayed in between the start and end of disp
 Specify whether or not the text should be scrolled. If false, the text will never be scrolled even if it is long enough. This command is primarily meant for use with -m. (default: true)
 .TP
 \fB-m REGEXP OPTIONS\fR, \fB --match-text REGEXP OPTIONS\fR
-Specify a regexp search term to look for in the output of the corresponding --match-command. When found, the settings will be changed. Using this flag allows the user to specify any option (besides -m and -M, which will be ignored) and optionally the positional scroll-text argument multiple times. Settings that are not specified will default to the user-specified values outside of the --match-text or the base defaults (when those options were not set by the user). (default: none)
+Specify a regexp search term to look for in the output of the corresponding --match-command. When found, the settings will be changed. ".*" can be used to just check that the command succeeded. Using this flag allows the user to specify the options that are potentially useful to change (currently -l, -a, -b, -p, and -u) and optionally the positional scroll-text argument multiple times. Settings that are not specified will default to the user-specified values outside of the --match-text or the base defaults (when those options were not set by the user). (default: none)
 .TP
 \fB-M COMMAND\fR, \fB --match-command=COMMAND\fR
 Specify a command to search the output of. This option is required for -m to work. The user can either specify one -M for all -m searches or an equal number of both. (default: none)
@@ -55,6 +55,9 @@ Add a newline after every update/step (may be necessary for use with panels). Ta
 .TP
 \fB\-t TIME\fR, \fB \-\-timeout=TIME\fR
 Time in seconds to run before closing. An argument of zero implies infinite duration. (default: 0)
+\fB\-C LINES\fR, \fB \-\-shift-count=LINES\fR
+The number of lines to output/times to shift the scrolling text before exiting. An argument of 0 means to print an infinite number of lines (default: 0)
+
 .SH EXAMPLES
 These examples are meant for testing in the terminal (remove the "-n false" for use with panels).
 

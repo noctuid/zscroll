@@ -5,12 +5,8 @@
 
 The most common use cases are described in this README. For complete information on every flag, please see the man page (or the help text for basic information on every flag).
 
-** Version 2.0 Breaking Changes
-- Long options are now hyphenated (e.g. =--update-check=)
-- All boolean options take an argument (e.g. =--scroll false=)
-- Newlines will be used by default (=--newline= defaults to true) as zscroll's primary use case is for panels, and this behavior is necessary for scrolling to work with polybar and lemonbar.
-- =-m= / =-M= syntax has changed to eliminate the previous complicated rules
-- The =-f= and =-c= flags have been removed. I don't see them as having a legitimate use case (the default behavior for handling fullwidth characters is much saner), but if anyone would like them back, feel free to make an issue. =-c= would count fullwidth characters as length 1, causing the scrolling text length to change. =-f= would convert all letters to fullwidth if any fullwidth letters were found.
+** Breaking Changes
+See the Changelog.
 
 ** Simple Example
 Scroll the currently playing mpd song:
@@ -36,14 +32,21 @@ $ nix-env -i zscroll
 #+end_src
 
 *** Manual
+[[https://github.com/python-poetry/poetry][Poetry]] is required.
+
 #+begin_src sh
 $ git clone https://github.com/noctuid/zscroll
 $ cd zscroll
-$ sudo python3 setup.py install
+$ poetry install
+$ poetry build
+# this is just an example name; the generated whl will be different depending on
+# the version of zscroll
+$ pip install --user ./dist/zscroll-2.0.1-py3-none-any.whl
+# or install with pipx
+$ pipx install ./dist/zscroll-2.0.1-py3-none-any.whl
+# install shell completions
+$ zscroll --install-completion
 #+end_src
-This program will not work with Python 2. For this reason you *must* install with Python 3. This can be done in Ubuntu with =sudo python3 setup.py install= and may be the same for other distributions. If this does not work for you, please consult your distribution's documentation.
-
-/Note: [[https://github.com/asdf-vm/asdf][asdf]] users might have to run/ ~asdf reshim~ /command before using/ ~zscroll~.
 
 ** Dynamically Updating Text
 Zscroll can now update its text by itself. This may be nice for panels that don't allow for the user to conditionally start new processes. It also simplifies the logic necessary to change settings for the scrolling text and gets rid of the need for an [[https://github.com/noctuid/dotfiles/blob/a251c682aa71e115ca83e75f938016e2f134ed47/aesthetics/.panel_scripts/panel#L39][ugly function]] to repeatedly kill and start the scroller.
@@ -53,7 +56,7 @@ A simple use case is where one might want to display the current window's title.
 zscroll -b "| " -a " |" -u true "xtitle"
 #+end_src
 
-Zscroll even supports more complex updates by searching for a regular expression in the output of a command to determine whether certain settings should be changed. As an example, this can be useful for displaying a pause icon and prevent scrolling when the current song is paused. The following command will take these actions when "paused" is found in the output of the shell command ~mpc status~:
+Zscroll even supports more complex updates by searching for a regular expression in the output of a command (or =.*= to just check if the command succeeded) to determine whether certain settings should be changed. As an example, this can be useful for displaying a pause icon and prevent scrolling when the current song is paused. The following command will take these actions when "paused" is found in the output of the shell command ~mpc status~:
 #+begin_src sh
 zscroll --before-text "♪ x" --delay 0.3 \
 		--match-command "mpc status" \
@@ -68,7 +71,19 @@ zscroll -b "♪ x" -d 0.3 \
 		-u t "mpc current"
 #+end_src
 
-New options (and possibly new scroll-text) should be specified as the second argument to every =-m=. Options not specified with an =-m= will default to the user-specified values outside of the =-m= (or the base defaults). Any option can be altered when a ~-m~ search term is found (except for =-m= and =-M=, which will be ignored). Note that when multiple ~-m~ options happen to be matched, it is the last one that will take effect.
+New options (and possibly new scroll-text) should be specified as the second argument to every =-m=. Options not specified with an =-m= will default to the user-specified values outside of the =-m= (or the base defaults).
+
+Here are the options that can be changed:
+- =-l= / =--length=
+- =-b= / =--before-text=
+- =-a= / =--after-text=
+- =-p= / =--scroll-padding=
+- =-u= / =--update-check=
+- the text to scroll
+
+Currently the other options are global only as it did not make sense to me to be able to change them (though feel free to create an issue if there are any other options you would like to be able to dynamically update).
+
+Note that when multiple ~-m~ options happen to be matched, it is the last one that will take effect.
 
 See the man page for more information.
 
@@ -117,8 +132,8 @@ Zscroll supports the features I liked from each. It has a speed option, adds an 
 I called this zscroll because it's the last scroller I'll use... but more importantly because I couldn't think of another name.
 
 ** Contributing
-Zscroll is using [[https://black.readthedocs.io/en/stable/][black]] and [[https://pycqa.github.io/isort/][isort]] for automatic formatting and import sorting. [[http://flake8.pycqa.org/en/latest/][flake8]] and [[https://www.pylint.org/][pylint]], and [[http://www.pydocstyle.org/en/stable/][pydocstyle]] are used for linting. [[https://docs.pytest.org/en/latest/][pytest]] is used for testing.
+Zscroll uses [[https://github.com/charliermarsh/ruff][ruff]] (replacing most of the previously used linters), [[https://www.pylint.org/][pylint]], and [[https://github.com/python/mypy][mypy]] for linting.  It uses [[https://black.readthedocs.io/en/stable/][black]] for automatic formatting and ruff for import sorting.  You can use ruff and black integration in your editor/IDE, use a pre-commit hook, or run ~poetry run poe fix~ to fix formatting and any issues ruff can automatically fix (e.g. import sorting).
 
-Development dependencies can be installed with ~make deps~ or ~poetry installed~ ([[https://python-poetry.org/][poetry]] must be installed first). If you want to make a PR, please write tests for any added or fixed functionality and make sure that the code passes ~make lint~ and ~make test~.
+Zscroll uses [[https://python-poetry.org/][poetry]] for project/dependency management.  Python (the version listed in the pyproject.toml file) and poetry should be installed.  If you use [[https://github.com/NixOS/nix][nix]], [[https://github.com/direnv/direnv][direnv]] and [[https://github.com/nix-community/nix-direnv][nix-direnv]], the correct version of python and poetry will automatically be installed and available in this directory.
 
-To automatically format with black when committing and abort the commit if there are any flake8 errors, you can install [[https://pre-commit.com/][pre-commit]] and run =pre-commit install= once in the repository root after cloning.
+Development dependencies can be installed with ~poetry install~.  If you want to make a PR, please write tests for any added or fixed functionality and make sure that the code passes ~poetry run poe lint~ and ~poetry run poe test~.

@@ -18,23 +18,102 @@ exclude = '''
 )/
 '''
 
-[tool.isort]
-# black compatible settings
-# https://github.com/timothycrosley/isort/issues/694
-multi_line_output = 3
-include_trailing_comma = true
-force_grid_wrap = 0
-use_parentheses = true
-line_length = 100
+[tool.pylint."MESSAGES CONTROL"]
+# - bad-continuation is broken and conflicts with black formatting (is this
+#   still true? either way it shouldn't be necessary with black)
+# - invalid name has too many false positives (allow non all-caps globals and
+#   1-2 letter variables)
+disable = [
+    "bad-continuation",
+    "invalid-name",
+    "fixme",
+]
 
-[tool.pydocstyle]
-match = "(.*\\.py|zscroll)"
+[tool.pylint.SIMILARITIES]
+# ignore imports when computing similarities
+ignore-imports = true
+
+[tool.pylint.DESIGN]
+# max instance attributes
+max-attributes = 15
+
+[tool.ruff]
+# increase line length to 100
+line-length = 100
+# support Python 3.10+
+target-version = "py310"
+
+# add additional rules
+select = [
+    # defaults
+    "E",   # pycodestyle, omits stylistic checks covered by black
+    "F",   # pyflakes
+    # add
+    # "C90", # mccabe
+    "I",   # isort
+    "N",   # pep8-naming
+    "D",   # pydocstyle
+    "UP",  # pyupgrade (detect old syntax, e.g. suggest using set literals)
+    "YTT", # flake8-2020 (detect sys.version misuse)
+    # if want to require type annotations
+    # "ANN", # flake8-annotations
+    "S",   # flake8-bandit (security checks)
+    # "BLE", # flake8-blind-except (also disallow except Exception:)
+    "B",   # flake8-bugbear (bug detection beyond pycodestyle)
+    "A",   # flake8-builtins (warn about shadowing builtins)
+    # not useful when already using black
+    # "COM", # flake8-comma (require trialing commas)
+    # some overlap with pyupgrade
+    "C4",  # flake8-comprehensions (set/list/dict comprehension suggestions)
+    "DTZ", # flake8-datetimez (require tz info when using datetime)
+    "T10", # flake8-debugger (ipdb/pdb statement checker)
+    "EM",  # flake8-errmsg (disallow using format strings directly when raising)
+    "EXE", # flake8-executable (shebang and executable bit checks) 
+    "ISC", # flake8-implicit-str-concat (e.g. disallow '111' '222' on same line)
+    # TODO not in official release
+    # "INC", # flake8-import-conventions (e.g. expect import numpy as np)
+    "G",   # flake8-logging-format (disallow format strings with logging; use extra= instead)
+    "INP", # flake8-no-pep420 (require __init__.py so as to not break tools that require)
+    "PIE", # flake8-pie (misc lints)
+    "T20", # flake8-print (check for print statements) 
+    "PYI", # flake8-pyi (lint stubs files)
+    "PT",  # flake8-pytest-style (check for common pytest style issues)
+    # "Q",   # flake8-quotes (enforce single or double quotes)
+    "RSE", # flake8-raise (detect unnecessary parens on raise)
+    "RET", # flake8-return (return statement linting)
+    "SLF", # flake8-self (disallow private member access)
+    "SIM", # flake8-simplify (rules to simplify code)
+    # TODO not in official release
+    # "TD",  # flake8-tidy-imports (e.g. ban some? relative imports)
+    # "TCH", # flake8-type-checking
+    "ARG", # flake8-unused-arguments
+    # "PTH", # flake8-use-pathlib (prefer pathlib functions over os.<whatever> and open())
+    # "ERA", # eradicate (disallow commented code)
+    "PD",  # pandas-vet (opinionated pandas linting)
+    "PGH", # pygrep-hooks (e.g. require ignoring specific codes, no eval())
+    # not using until can replace pylint completely
+    # "PL",  # pylint
+    "TRY", # tryceratops (detect exception handling anti-patterns)
+    "NPY", # numpy-specific rules (e.g. warn about deprecated/legacy code)
+    "RUF", # ruf-specific rules (e.g. unused noqa)
+]
+
+ignore = [
+    # do not require black line before class docstring (conflicts with D211)
+    "D203",
+    # do not require multi-line docstrings to start at second line (conflicts with D212)
+    "D213"
+]
+
+[tool.ruff.per-file-ignores]
+# don't lint test files with bandit (e.g. assert is supposed to be used in tests)
+"test_*.py" = ["S"]
 
 [tool.poetry]
 name = "zscroll"
 version = "2.0.1"
 description = "A text scroller for panels or terminals"
-authors = ["Fox Kiester <noct@posteo.net>"]
+authors = ["Fox Kiester <noct@pir-hana.cafe>"]
 license = "GPL-3.0-only"
 readme = "README.org"
 repository = "https://github.com/noctuid/zscroll"
@@ -44,29 +123,52 @@ packages = [
     { include = "zscroll" },
 ]
 
-# no way to specify data_files
-# https://github.com/python-poetry/poetry/issues/890
+# TODO get working
+# https://github.com/spoorn/poeblix
+[tool.blix.data]
+data_files = [
+    { destination = "share/man/man1", from = [ "zscroll.1" ] },
+    { destination = "share/licenses/zscroll", from = [ "LICENSES" ] }
+]
 
-# doesn't work
-# [tool.poetry.scripts]
-# zscroll = "zscroll:main"
+[tool.poetry.scripts]
+zscroll = "zscroll.main:app"
+
+[tool.poe.tasks]
+ruff  = "ruff check zscroll tests"
+pylint = "pylint zscroll tests"
+mypy = "mypy zscroll tests"
+black-check = "black --check zscroll tests"
+lint.sequence = ["ruff", "pylint", "mypy", "black-check"]
+# run all linters even if one fails, but still return non-zero
+lint.ignore_fail = "return_non_zero"
+
+black-format = "black zscroll tests"
+ruff-fix = "ruff check --fix zscroll tests"
+# ruff should run before black (https://beta.ruff.rs/docs/usage/)
+fix.sequence = ["ruff-fix", "black-format"]
+format.ref = "fix"
+
+test = "pytest -n auto -vv"
+test-failed = "pytest -n auto --lf -vv"
+test-with-cov = "pytest -n auto -vv --cov=zscroll"
 
 [tool.poetry.dependencies]
-python = ">=3.6.2,<4.0"
+python = ">=3.7,<4.0"
+typer = "^0.7.0"
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 pytest = "^6.2.4"
 black = "^21.7b0"
 pytest-cov = "^2.12.1"
 codecov = "^2.1.12"
-flake8 = "^3.9.2"
 pylint = "^2.9.6"
 mypy = "^0.910"
-isort = "^5.9.3"
-pydocstyle = "^6.1.1"
-pycodestyle = "^2.7.0"
-pyflakes = "^2.3.1"
-mccabe = "^0.6.1"
+ruff = "^0.0.257"
+poethepoet = "^0.18.1"
+pytest-xdist = "^3.2.1"
+pytest-clarity = "^1.0.1"
+pytest-sugar = "^0.9.6"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
