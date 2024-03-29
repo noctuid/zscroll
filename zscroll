@@ -39,6 +39,13 @@ parser.add_argument(
 )
 
 parser.add_argument(
+    '--always-reprint',
+    type=str_to_bool,
+    default=False,
+    help="reprint text every delay even if it hasn't changed"
+)
+
+parser.add_argument(
     '-l',
     '--length',
     type=int,
@@ -425,7 +432,7 @@ def zscroll(lines=0):
             needs_scrolling,
             (last_hidden_was_wide or next_hidden_is_wide),
         )
-        if args.scroll and needs_scrolling or should_restart_printing:
+        if args.always_reprint or (args.scroll and needs_scrolling) or should_restart_printing:
             print_text(display_text)
             should_restart_printing = False
         if args.scroll and needs_scrolling:
